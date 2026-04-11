@@ -5,7 +5,6 @@ import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/auth_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 
-import 'app_routes.dart';
 
 final GoRouter router = GoRouter(
   initialLocation: AppRoutes.splash,
