@@ -1,31 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import 'features/auth/view/login_screen.dart';
-import 'features/auth/viewmodel/auth_viewmodel.dart';
-import 'services/auth_service.dart';
+import 'package:health_assistant/core/constants/app_routes.dart';
+import 'package:health_assistant/core/theme/app_theme.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final AuthService _authService = AuthService();
+  const MyApp({super.key});
 
-  MyApp({super.key});
-
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (_) => AuthViewModel(_authService),
-        ),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: LoginScreen(),
-      ),
+    return MaterialApp.router(
+      routerConfig: router,
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.system,
     );
   }
 }
+
