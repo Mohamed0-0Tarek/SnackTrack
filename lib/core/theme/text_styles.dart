@@ -3,133 +3,67 @@ import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 
 class AppTextStyles {
-  // ── DARK (CyberCortex) ─────────────────────────
-
-  // Headline → Space Grotesk
+  // ── DARK (CyberCortex) ──────────────────────────────────────────────────────
   static final TextStyle darkDisplayLarge = GoogleFonts.spaceGrotesk(
-    color: CyberCortexColors.textPrimary,
-    fontSize: 32,
-    fontWeight: FontWeight.bold,
+    color: CyberCortexColors.textPrimary, fontSize: 32, fontWeight: FontWeight.bold,
   );
-
   static final TextStyle darkDisplayMedium = GoogleFonts.spaceGrotesk(
-    color: CyberCortexColors.textPrimary,
-    fontSize: 26,
-    fontWeight: FontWeight.bold,
+    color: CyberCortexColors.textPrimary, fontSize: 26, fontWeight: FontWeight.bold,
   );
-
   static final TextStyle darkHeadlineLarge = GoogleFonts.spaceGrotesk(
-    color: CyberCortexColors.textPrimary,
-    fontSize: 22,
-    fontWeight: FontWeight.w600,
+    color: CyberCortexColors.textPrimary, fontSize: 22, fontWeight: FontWeight.w600,
   );
-
   static final TextStyle darkHeadlineMedium = GoogleFonts.spaceGrotesk(
-    color: CyberCortexColors.textPrimary,
-    fontSize: 18,
-    fontWeight: FontWeight.w600,
+    color: CyberCortexColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w600,
   );
-
-  // Body → Manrope
   static final TextStyle darkBodyLarge = GoogleFonts.manrope(
-    color: CyberCortexColors.textPrimary,
-    fontSize: 16,
-    fontWeight: FontWeight.normal,
+    color: CyberCortexColors.textPrimary, fontSize: 16,
   );
-
   static final TextStyle darkBodyMedium = GoogleFonts.manrope(
-    color: CyberCortexColors.textPrimary,
-    fontSize: 14,
-    fontWeight: FontWeight.normal,
+    color: CyberCortexColors.textPrimary, fontSize: 14,
   );
-
   static final TextStyle darkBodySmall = GoogleFonts.manrope(
-    color: CyberCortexColors.textSecondary,
-    fontSize: 12,
-    fontWeight: FontWeight.normal,
+    color: CyberCortexColors.textSecondary, fontSize: 12,
   );
-
-  // Label → Inter
   static final TextStyle darkLabelLarge = GoogleFonts.inter(
-    color: CyberCortexColors.textPrimary,
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
+    color: CyberCortexColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w500,
   );
-
   static final TextStyle darkLabelMedium = GoogleFonts.inter(
-    color: CyberCortexColors.textSecondary,
-    fontSize: 12,
-    fontWeight: FontWeight.w400,
+    color: CyberCortexColors.textSecondary, fontSize: 12,
   );
-
   static final TextStyle darkLabelSmall = GoogleFonts.inter(
-    color: CyberCortexColors.textSecondary,
-    fontSize: 10,
-    fontWeight: FontWeight.w400,
+    color: CyberCortexColors.textSecondary, fontSize: 10,
   );
 
-  // ── LIGHT (Lumina) ─────────────────────────────
-
-  // Headline → Space Grotesk
+  // ── LIGHT (Lumina) ──────────────────────────────────────────────────────────
   static final TextStyle lightDisplayLarge = GoogleFonts.spaceGrotesk(
-    color: LuminaColors.textPrimary,
-    fontSize: 32,
-    fontWeight: FontWeight.bold,
+    color: LuminaColors.textPrimary, fontSize: 32, fontWeight: FontWeight.bold,
   );
-
   static final TextStyle lightDisplayMedium = GoogleFonts.spaceGrotesk(
-    color: LuminaColors.textPrimary,
-    fontSize: 26,
-    fontWeight: FontWeight.bold,
+    color: LuminaColors.textPrimary, fontSize: 26, fontWeight: FontWeight.bold,
   );
-
   static final TextStyle lightHeadlineLarge = GoogleFonts.spaceGrotesk(
-    color: LuminaColors.textPrimary,
-    fontSize: 22,
-    fontWeight: FontWeight.w600,
+    color: LuminaColors.textPrimary, fontSize: 22, fontWeight: FontWeight.w600,
   );
-
   static final TextStyle lightHeadlineMedium = GoogleFonts.spaceGrotesk(
-    color: LuminaColors.textPrimary,
-    fontSize: 18,
-    fontWeight: FontWeight.w600,
+    color: LuminaColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w600,
   );
-
-  // Body → Inter
   static final TextStyle lightBodyLarge = GoogleFonts.inter(
-    color: LuminaColors.textPrimary,
-    fontSize: 16,
-    fontWeight: FontWeight.normal,
+    color: LuminaColors.textPrimary, fontSize: 16,
   );
-
   static final TextStyle lightBodyMedium = GoogleFonts.inter(
-    color: LuminaColors.textPrimary,
-    fontSize: 14,
-    fontWeight: FontWeight.normal,
+    color: LuminaColors.textPrimary, fontSize: 14,
   );
-
   static final TextStyle lightBodySmall = GoogleFonts.inter(
-    color: LuminaColors.textSecondary,
-    fontSize: 12,
-    fontWeight: FontWeight.normal,
+    color: LuminaColors.textSecondary, fontSize: 12,
   );
-
-  // Label → Space Grotesk
   static final TextStyle lightLabelLarge = GoogleFonts.spaceGrotesk(
-    color: LuminaColors.textPrimary,
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
+    color: LuminaColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w500,
   );
-
   static final TextStyle lightLabelMedium = GoogleFonts.spaceGrotesk(
-    color: LuminaColors.textSecondary,
-    fontSize: 12,
-    fontWeight: FontWeight.w400,
+    color: LuminaColors.textSecondary, fontSize: 12,
   );
-
   static final TextStyle lightLabelSmall = GoogleFonts.spaceGrotesk(
-    color: LuminaColors.textSecondary,
-    fontSize: 10,
-    fontWeight: FontWeight.w400,
+    color: LuminaColors.textSecondary, fontSize: 10,
   );
 }

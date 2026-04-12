@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
 
 enum NavItem { dashboard, history, addMeal, reports, profile }
 
@@ -16,7 +17,6 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
       decoration: BoxDecoration(
         color: isDark ? CyberCortexColors.surface : LuminaColors.surface,
@@ -33,34 +33,11 @@ class BottomNavBar extends StatelessWidget {
           height: 64,
           child: Row(
             children: [
-              _NavBarItem(
-                icon: Icons.home_rounded,
-                label: 'Dashboard',
-                isActive: currentIndex == NavItem.dashboard,
-                onTap: () => onTap(NavItem.dashboard),
-              ),
-              _NavBarItem(
-                icon: Icons.calendar_month_rounded,
-                label: 'History',
-                isActive: currentIndex == NavItem.history,
-                onTap: () => onTap(NavItem.history),
-              ),
-              _AddMealButton(
-                isActive: currentIndex == NavItem.addMeal,
-                onTap: () => onTap(NavItem.addMeal),
-              ),
-              _NavBarItem(
-                icon: Icons.bar_chart_rounded,
-                label: 'Reports',
-                isActive: currentIndex == NavItem.reports,
-                onTap: () => onTap(NavItem.reports),
-              ),
-              _NavBarItem(
-                icon: Icons.person_rounded,
-                label: 'Profile',
-                isActive: currentIndex == NavItem.profile,
-                onTap: () => onTap(NavItem.profile),
-              ),
+              _NavBarItem(icon: Icons.home_rounded,        label: AppStrings.dashboard, isActive: currentIndex == NavItem.dashboard, onTap: () => onTap(NavItem.dashboard)),
+              _NavBarItem(icon: Icons.calendar_month_rounded, label: AppStrings.history,   isActive: currentIndex == NavItem.history,   onTap: () => onTap(NavItem.history)),
+              _AddMealButton(isActive: currentIndex == NavItem.addMeal, onTap: () => onTap(NavItem.addMeal)),
+              _NavBarItem(icon: Icons.bar_chart_rounded,   label: AppStrings.reports,   isActive: currentIndex == NavItem.reports,   onTap: () => onTap(NavItem.reports)),
+              _NavBarItem(icon: Icons.person_rounded,      label: AppStrings.profile,   isActive: currentIndex == NavItem.profile,   onTap: () => onTap(NavItem.profile)),
             ],
           ),
         ),
@@ -69,27 +46,18 @@ class BottomNavBar extends StatelessWidget {
   }
 }
 
-// ── Regular nav item ───────────────────────────────────────────────────────────
-
 class _NavBarItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool isActive;
   final VoidCallback onTap;
-
-  const _NavBarItem({
-    required this.icon,
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
+  const _NavBarItem({required this.icon, required this.label, required this.isActive, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? CyberCortexColors.primary : LuminaColors.primary;
+    final isDark   = Theme.of(context).brightness == Brightness.dark;
+    final primary  = isDark ? CyberCortexColors.primary : LuminaColors.primary;
     final inactive = isDark ? CyberCortexColors.textSecondary : LuminaColors.textSecondary;
-
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -101,24 +69,13 @@ class _NavBarItem extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: isActive ? primary.withAlpha(25) : Colors.transparent,
+                color: isActive ? primary.withOpacity(0.12) : Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                icon,
-                size: 22,
-                color: isActive ? primary : inactive,
-              ),
+              child: Icon(icon, size: 22, color: isActive ? primary : inactive),
             ),
             const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
-                color: isActive ? primary : inactive,
-              ),
-            ),
+            Text(label, style: TextStyle(fontSize: 10, fontWeight: isActive ? FontWeight.w500 : FontWeight.w400, color: isActive ? primary : inactive)),
           ],
         ),
       ),
@@ -126,20 +83,16 @@ class _NavBarItem extends StatelessWidget {
   }
 }
 
-// ── Add Meal center button ─────────────────────────────────────────────────────
-
 class _AddMealButton extends StatelessWidget {
   final bool isActive;
   final VoidCallback onTap;
-
   const _AddMealButton({required this.isActive, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? CyberCortexColors.primary : LuminaColors.primary;
+    final isDark   = Theme.of(context).brightness == Brightness.dark;
+    final primary  = isDark ? CyberCortexColors.primary : LuminaColors.primary;
     final inactive = isDark ? CyberCortexColors.textSecondary : LuminaColors.textSecondary;
-
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -149,27 +102,12 @@ class _AddMealButton extends StatelessWidget {
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: primary,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(
-                Icons.add_rounded,
-                color: Colors.black,
-                size: 26,
-              ),
+              width: 46, height: 46,
+              decoration: BoxDecoration(color: primary, borderRadius: BorderRadius.circular(14)),
+              child: const Icon(Icons.add_rounded, color: Colors.black, size: 26),
             ),
             const SizedBox(height: 2),
-            Text(
-              'Add Meal',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-                color: isActive ? primary : inactive,
-              ),
-            ),
+            Text(AppStrings.addMeal, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: isActive ? primary : inactive)),
           ],
         ),
       ),
