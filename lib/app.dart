@@ -35,6 +35,7 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProfileController()),
       ],
       child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
         title:       'ScnakTrack',
         theme:       AppTheme.light,
         darkTheme:   AppTheme.dark,
@@ -50,6 +51,7 @@ final _router = GoRouter(
   routes: [
     GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
     GoRoute(path: AppRoutes.auth,   builder: (_, __) => const AuthScreen()),
-    GoRoute(path: AppRoutes.main,   builder: (_, __) => const MainScreen()),
+    GoRoute(path: AppRoutes.main,   builder: (_, __) => const MainScreen(initialIndex: 0)),
+    GoRoute(path: AppRoutes.profile, builder: (_, __) => const MainScreen(initialIndex: 4)), 
   ],
 );

@@ -7,4 +7,5 @@ class AppRoutes {
   static const String analysis = '/meal-analysis';
   static const String aiCoach  = '/ai-coach';
   static const String recipe   = '/recipe-generator';
+  static const String profile  = '/profile';
 }

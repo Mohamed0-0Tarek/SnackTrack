@@ -20,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
     final token = StorageService.getToken();
-    context.go(token != null ? AppRoutes.main : AppRoutes.onboard);
+    context.go(token != null ? AppRoutes.main : AppRoutes.profile);
   }
 
   @override

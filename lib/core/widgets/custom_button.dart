@@ -5,13 +5,15 @@ class CustomButton extends StatelessWidget {
   final VoidCallback onPressed;
   final bool isLoading;
   final bool outlined;
+  final Color? color;
 
   const CustomButton({
     super.key,
     required this.label,
     required this.onPressed,
     this.isLoading = false,
-    this.outlined  = false,
+    this.outlined  = false, 
+    this.color,
   });
 
   @override
@@ -24,15 +26,15 @@ class CustomButton extends StatelessWidget {
           ? OutlinedButton(
               onPressed: isLoading ? null : onPressed,
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: primary),
+                side: BorderSide(color: color ?? primary),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
-              child: _child(primary),
+              child: _child(color ?? primary),
             )
           : ElevatedButton(
               onPressed: isLoading ? null : onPressed,
               style: ElevatedButton.styleFrom(
-                backgroundColor: primary,
+                backgroundColor: color ?? primary,
                 foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
