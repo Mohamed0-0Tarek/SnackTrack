@@ -33,6 +33,8 @@ class DailySummaryModel {
   final int    exerciseCalories;
 
   /// Grams of protein consumed today.
+  final DateTime date; // ← أضفنا دي
+
   final double totalProtein;
 
   /// Grams of carbs consumed today.
@@ -54,6 +56,7 @@ class DailySummaryModel {
   final List<MealModel> meals;
 
   DailySummaryModel({
+    required this.date, // ← أضفنا دي
     required this.totalCalories,
     required this.calorieGoal,
     this.exerciseCalories = 0,
@@ -82,16 +85,25 @@ class DailySummaryModel {
   ///
   /// Nullable casts (`as num?`) with `?? default` ensure the model
   /// degrades gracefully when optional goal fields are missing.
-  factory DailySummaryModel.fromJson(Map<String, dynamic> json) => DailySummaryModel(
-    totalCalories:    json['total_calories'],
-    calorieGoal:      json['calorie_goal'],
-    exerciseCalories: json['exercise_calories'] ?? 0,
-    totalProtein:     (json['total_protein'] as num).toDouble(),
-    totalCarbs:       (json['total_carbs']   as num).toDouble(),
-    totalFat:         (json['total_fat']     as num).toDouble(),
-    proteinGoal:      (json['protein_goal'] as num?)?.toDouble() ?? 150,
-    carbsGoal:        (json['carbs_goal']   as num?)?.toDouble() ?? 250,
-    fatGoal:          (json['fat_goal']     as num?)?.toDouble() ?? 65,
-    meals: (json['meals'] as List).map((m) => MealModel.fromJson(m)).toList(),
-  );
+  String get dateLabel {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final d = DateTime(date.year, date.month, date.day);
+    if (d == today) return 'Today';
+    if (d == today.subtract(const Duration(days: 1))) return 'Yesterday';
+    return '${date.day}/${date.month}/${date.year}';
+  }
+
+  factory DailySummaryModel.fromJson(Map<String, dynamic> json) =>
+      DailySummaryModel(
+        date: DateTime.parse(json['date']), // ← أضفنا دي
+        totalCalories: json['total_calories'],
+        calorieGoal: json['calorie_goal'],
+        totalProtein: (json['total_protein'] as num).toDouble(),
+        totalCarbs: (json['total_carbs'] as num).toDouble(),
+        totalFat: (json['total_fat'] as num).toDouble(),
+        meals: (json['meals'] as List)
+            .map((m) => MealModel.fromJson(m))
+            .toList(),
+      );
 }

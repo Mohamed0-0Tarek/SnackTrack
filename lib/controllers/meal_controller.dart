@@ -30,6 +30,21 @@ import '../services/meal_service.dart';
 /// - [week]   — meals from the last 7 calendar days.
 /// - [month]  — meals from the last 30 calendar days.
 enum HistoryFilter { today, week, month }
+enum MealInputMethod { text, photo, barcode, voice }
+
+class FavoriteMealModel {
+  final String id;
+  final String name;
+  final int calories;
+  final double protein;
+
+  const FavoriteMealModel({
+    required this.id,
+    required this.name,
+    required this.calories,
+    required this.protein,
+  });
+}
 
 class MealController extends ChangeNotifier {
   /// Injected data-layer dependency (see also: `app.dart` Provider setup).
@@ -65,7 +80,9 @@ class MealController extends ChangeNotifier {
   /// Returns `true` on success so the caller can navigate forward,
   /// or `false` on failure so it can show an error.
   Future<bool> analyzeMeal(String description) async {
-    isLoading = true; error = null; notifyListeners();
+    isLoading = true;
+    error = null;
+    notifyListeners();
     try {
       analyzedMeal = await _mealService.analyzeMeal(description);
       return true;
@@ -73,7 +90,8 @@ class MealController extends ChangeNotifier {
       error = 'Could not analyze meal. Try again.';
       return false;
     } finally {
-      isLoading = false; notifyListeners();
+      isLoading = false;
+      notifyListeners();
     }
   }
 
@@ -82,13 +100,15 @@ class MealController extends ChangeNotifier {
   /// Guard: silently returns if [analyzedMeal] is null (nothing to save).
   Future<void> saveMeal() async {
     if (analyzedMeal == null) return;
-    isLoading = true; notifyListeners();
+    isLoading = true;
+    notifyListeners();
     try {
       await _mealService.saveMeal(analyzedMeal!);
     } catch (e) {
       error = 'Could not save meal.';
     } finally {
-      isLoading = false; notifyListeners();
+      isLoading = false;
+      notifyListeners();
     }
   }
 
@@ -99,13 +119,15 @@ class MealController extends ChangeNotifier {
   /// Falls back to [_mockHistory] during development when the backend
   /// is unreachable, so the history screen can still be worked on.
   Future<void> loadHistory() async {
-    isLoading = true; notifyListeners();
+    isLoading = true;
+    notifyListeners();
     try {
       history = await _mealService.getMealHistory();
     } catch (e) {
       history = _mockHistory;
     } finally {
-      isLoading = false; notifyListeners();
+      isLoading = false;
+      notifyListeners();
     }
   }
 
@@ -294,4 +316,25 @@ class MealController extends ChangeNotifier {
       source: 'Restaurant',
     ),
   ];
+  Future<void> addFavoriteMeal(FavoriteMealModel favorite) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      final meal = MealModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: favorite.name,
+        calories: favorite.calories,
+        protein: favorite.protein,
+        carbs: 0,
+        fat: 0,
+        loggedAt: DateTime.now(),
+      );
+      await _mealService.saveMeal(meal);
+    } catch (e) {
+      error = 'Could not log meal.';
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
 }

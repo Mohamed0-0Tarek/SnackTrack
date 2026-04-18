@@ -7,20 +7,28 @@ import 'views/reports/weekly_report_screen.dart';
 import 'views/profile/profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key, required int initialIndex});
+  final int initialIndex;
+  const MainScreen({super.key, required this.initialIndex});
+
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  NavItem _current = NavItem.dashboard;
+  late NavItem _current;
+
+  @override
+  void initState() {
+    super.initState();
+    _current = NavItem.values[widget.initialIndex];
+  }
 
   Widget get _screen => switch (_current) {
     NavItem.dashboard => const DashboardScreen(),
-    NavItem.history   => const MealHistoryScreen(),
-    NavItem.addMeal   => const AddMealScreen(),
-    NavItem.reports   => const WeeklyReportScreen(),
-    NavItem.profile   => const ProfileScreen(),
+    NavItem.history => const MealHistoryScreen(),
+    NavItem.addMeal => const AddMealScreen(),
+    NavItem.reports => const WeeklyReportScreen(),
+    NavItem.profile => const ProfileScreen(),
   };
 
   @override
@@ -28,22 +36,28 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: Container(
-          margin: const EdgeInsets.only(left: 12 ,top: 8, bottom: 8),
+          margin: const EdgeInsets.only(left: 12, top: 8, bottom: 8),
           decoration: BoxDecoration(
-            image: const DecorationImage(image: AssetImage("assets/images/person.png"), fit: BoxFit.fill),
+            image: const DecorationImage(
+              image: AssetImage("assets/images/person.png"),
+              fit: BoxFit.fill,
+            ),
             color: Theme.of(context).colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(12),
           ),
-          // child: Image.asset("assets/images/logo.png", width: 20)
+        ),
+        title: Text(
+          'SnakeTrack',
+          style: Theme.of(context).textTheme.displayMedium?.copyWith(
+            color: Theme.of(context).primaryColor,
           ),
-        title: Text('SnackTrack' , 
-        style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Theme.of(context).primaryColor)),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none_outlined),
-            onPressed: () { },
+            onPressed: () {},
           ),
-          SizedBox(width: 10,)
+          const SizedBox(width: 10),
         ],
       ),
       body: _screen,

@@ -45,6 +45,16 @@ class MealHistoryScreen extends StatefulWidget {
 }
 
 class _MealHistoryScreenState extends State<MealHistoryScreen> {
+  final _searchCtrl = TextEditingController();
+
+  static const Map<String, String> _mealImages = {
+    'grilled salmon & avocado': 'assets/images/grilled_salmon_avocado.png',
+    'berry blast smoothie bowl': 'assets/images/berry_blast_smoothie.png',
+    'spicy ahi poke bowl': 'assets/images/spicy_ahi_poke.png',
+  };
+
+  String? _imageFor(MealModel meal) => _mealImages[meal.name.toLowerCase()];
+
   @override
   void initState() {
     super.initState();
@@ -54,6 +64,12 @@ class _MealHistoryScreenState extends State<MealHistoryScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MealController>().loadHistory();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
   }
 
   @override
