@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:health_assistant/controllers/setting_controller.dart';
+import 'package:health_assistant/views/ai/weekly_summary_screen.dart';
 import 'package:provider/provider.dart';
 import 'core/constants/app_routes.dart';
 import 'core/theme/app_theme.dart';
@@ -85,5 +86,9 @@ final _router = GoRouter(
       path: AppRoutes.analysis,
       builder: (_, __) => const MealAnalysisScreen(),
     ),
+    GoRoute(
+  path: AppRoutes.weeklySummary,
+  builder: (_, __) => const WeeklySummaryScreen(),
+),
   ],
 );

@@ -9,4 +9,5 @@ class AppRoutes {
   static const String recipe = '/recipe-generator';
   static const String profile = '/profile';
   static const String mealHistory = '/history';
+    static const String weeklySummary = '/weekly-summary';
 }

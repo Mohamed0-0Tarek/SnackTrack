@@ -77,6 +77,7 @@ class DashboardController extends ChangeNotifier {
   // `get` (a getter) so a fresh object is built each time — prevents
   // accidental mutation of a shared reference.
   static DailySummaryModel get _mockSummary => DailySummaryModel(
+    date: DateTime(2005),
     totalCalories:    1260,
     calorieGoal:      3100,
     exerciseCalories: 420,
