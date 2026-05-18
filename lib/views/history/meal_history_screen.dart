@@ -1,41 +1,9 @@
-// Meal history screen — browse, search, and filter past meal entries.
-//
-// ## Layout (top to bottom)
-//   1. [MealSearchBar]       — free-text search field.
-//   2. [HistoryFilterChips]  — Today / Week / Month toggle + sort icon.
-//   3. Date-grouped sections — each with a [DateSectionHeader] followed
-//      by a list of [MealHistoryCard]s.
-//
-// ## Flat-mapping a grouped Map into a ListView
-// [MealController.groupedHistory] returns a `Map<String, List<MealModel>>`
-// — date labels as keys and meal lists as values.  [ListView.builder]
-// expects a flat integer index, so we need a mapping strategy:
-//
-//   Index 0 → DateSectionHeader("Today")
-//   Index 1 → MealHistoryCard(salmon)
-//   Index 2 → MealHistoryCard(smoothie)
-//   Index 3 → DateSectionHeader("Yesterday")
-//   Index 4 → MealHistoryCard(poke bowl)
-//   …
-//
-// [_itemCount] sums `1 + meals.length` per section to get the total.
-// [_buildItem] walks the grouped map with a running cursor to decide
-// whether a given index is a header or a card.
-//
-// This approach avoids building the entire list up front (unlike
-// putting everything in a Column) — [ListView.builder] lazily creates
-// only the visible items, which matters for long meal histories.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import '../../controllers/meal_controller.dart';
-import '../../core/constants/app_dimensions.dart';
-import '../../core/widgets/loading_overlay.dart';
+import '../../controllers/history_controller.dart';
+import '../../models/daily_summary_model.dart';
 import '../../models/meal_model.dart';
-import 'widgets/date_section_header.dart';
-import 'widgets/history_filter_chips.dart';
-import 'widgets/meal_history_card.dart';
-import 'widgets/meal_search_bar.dart';
+import 'widgets/meal_card.dart';
 
 class MealHistoryScreen extends StatefulWidget {
   const MealHistoryScreen({super.key});
@@ -58,11 +26,8 @@ class _MealHistoryScreenState extends State<MealHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    // Defer the API call until the widget tree is ready.
-    // See dashboard_screen.dart for a detailed explanation of why
-    // `addPostFrameCallback` is necessary here.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MealController>().loadHistory();
+      context.read<HistoryController>().loadHistory();
     });
   }
 
@@ -74,172 +39,212 @@ class _MealHistoryScreenState extends State<MealHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // `watch` — rebuilds whenever MealController calls notifyListeners().
-    final controller = context.watch<MealController>();
-    final tt         = Theme.of(context).textTheme;
+    final controller = context.watch<HistoryController>();
+    final theme = Theme.of(context);
 
-    // ── Loading state ──────────────────────────────────────────────────────────
-    if (controller.isLoading) {
-      return const LoadingOverlay(isLoading: true, child: SizedBox.expand());
-    }
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
 
-    // The controller's computed getter already applies the active filter
-    // and search query, then groups by date — we just read the result.
-    final groups = controller.groupedHistory;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.paddingMD,
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 8),
-
-          // ── 1. Search bar ───────────────────────────────────────────────────
-          // `controller.setSearchQuery` is passed directly as the callback.
-          // Every keystroke updates the controller's `searchQuery`, which
-          // triggers `notifyListeners()`, which re-runs this build method,
-          // which re-reads `groupedHistory` — reactive filtering with no
-          // manual plumbing.
-          MealSearchBar(
-            onChanged: controller.setSearchQuery,
-          ),
-
-          const SizedBox(height: 14),
-
-          // ── 2. Filter chips row ─────────────────────────────────────────────
-          HistoryFilterChips(
-            selected: controller.selectedFilter,
-            onSelected: controller.setFilter,
-          ),
-
-          const SizedBox(height: 8),
-
-          // ── 3. Scrollable date-grouped meal list ────────────────────────────
-          // `Expanded` gives the ListView all remaining vertical space
-          // below the search bar and chips.
-          Expanded(
-            child: groups.isEmpty
-                // Show a friendly empty state instead of a blank screen
-                ? _EmptyState(textTheme: tt)
-                : ListView.builder(
-                    padding: const EdgeInsets.only(
-                      top: AppDimensions.paddingSM,
-                      // Extra bottom padding clears the bottom nav bar
-                      bottom: AppDimensions.paddingXL,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  // ── Search ──────────────────────────────────────────────
+                  TextField(
+                    controller: _searchCtrl,
+                    onChanged: controller.setSearch,
+                    decoration: InputDecoration(
+                      hintText: 'Search your meals...',
+                      hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.hintColor,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: theme.hintColor,
+                        size: 20,
+                      ),
+                      filled: true,
+                      fillColor: theme.cardColor,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
-                    // Total flat items = Σ(1 header + N cards) per section
-                    itemCount: _itemCount(groups),
-                    // Each call resolves the flat index to a widget
-                    itemBuilder: (context, index) =>
-                        _buildItem(context, groups, index),
                   ),
-          ),
-        ],
+
+                  const SizedBox(height: 16),
+
+                  // ── Filter chips + date picker ───────────────────────────
+                  Row(
+                    children: [
+                      _FilterChip(
+                        label: 'Today',
+                        selected: controller.filter == HistoryFilter.today,
+                        onTap: () => controller.setFilter(HistoryFilter.today),
+                      ),
+                      const SizedBox(width: 10),
+                      _FilterChip(
+                        label: 'Week',
+                        selected: controller.filter == HistoryFilter.week,
+                        onTap: () => controller.setFilter(HistoryFilter.week),
+                      ),
+                      const SizedBox(width: 10),
+                      _FilterChip(
+                        label: 'Month',
+                        selected: controller.filter == HistoryFilter.month,
+                        onTap: () => controller.setFilter(HistoryFilter.month),
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime(2024),
+                            lastDate: DateTime.now(),
+                          );
+                          if (picked != null) {
+                            // TODO: فلتر بالتاريخ لما الباك يكون جاهز
+                            controller.setFilter(HistoryFilter.today);
+                          }
+                        },
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: theme.cardColor,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: theme.dividerColor,
+                              width: 1,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.tune_rounded,
+                            color: theme.hintColor,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // ── List ──────────────────────────────────────────────────────
+            Expanded(
+              child: controller.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : controller.filtered.isEmpty
+                  ? _buildEmpty(theme)
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: controller.filtered.length,
+                      itemBuilder: (_, i) =>
+                          _buildDaySection(controller.filtered[i], theme),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // ── Flattened-list helpers ────────────────────────────────────────────────
-  //
-  // These two methods convert between the Map-based group structure
-  // and the flat integer indices that [ListView.builder] expects.
-
-  /// Counts the total number of widgets (headers + cards) across all
-  /// date sections.
-  ///
-  /// Each section contributes `1` (the header) + `entry.value.length`
-  /// (the meal cards).
-  int _itemCount(Map<String, List<MealModel>> groups) {
-    int count = 0;
-    for (final entry in groups.entries) {
-      count += 1 + entry.value.length;
-    }
-    return count;
+  Widget _buildDaySection(DailySummaryModel summary, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(summary.dateLabel, style: theme.textTheme.headlineLarge),
+            Text(
+              '${summary.totalCalories} kcal total',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ...summary.meals.map(
+          (meal) => MealCard(meal: meal, imagePath: _imageFor(meal)),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
   }
 
-  /// Maps a flat [index] into either a [DateSectionHeader] or a
-  /// [MealHistoryCard] by walking the grouped map with a running cursor.
-  ///
-  /// ### Algorithm
-  /// ```
-  /// cursor = 0
-  /// for each section:
-  ///   if index == cursor → it's this section's header
-  ///   cursor++
-  ///   if index < cursor + sectionLength → it's a card at (index - cursor)
-  ///   cursor += sectionLength
-  /// ```
-  Widget _buildItem(
-    BuildContext context,
-    Map<String, List<MealModel>> groups,
-    int index,
-  ) {
-    int cursor = 0;
-    for (final entry in groups.entries) {
-      // ── Header position ───────────────────────────────────────────
-      if (index == cursor) {
-        // Sum calories for the section using `fold`:
-        // start at 0, accumulate each meal's calories.
-        final totalCals =
-            entry.value.fold<int>(0, (sum, m) => sum + m.calories);
-        return DateSectionHeader(
-          label: entry.key,
-          totalCalories: totalCals,
-        );
-      }
-      cursor++;
-
-      // ── Card position ─────────────────────────────────────────────
-      if (index < cursor + entry.value.length) {
-        final meal = entry.value[index - cursor];
-        return MealHistoryCard(
-          name:     meal.name,
-          type:     meal.type,
-          source:   meal.source,
-          imageUrl: meal.imageUrl,
-          calories: meal.calories,
-          protein:  meal.protein,
-          carbs:    meal.carbs,
-          fat:      meal.fat,
-          loggedAt: meal.loggedAt,
-        );
-      }
-      cursor += entry.value.length;
-    }
-    // Safety fallback — should never be reached if _itemCount is correct.
-    return const SizedBox.shrink();
+  Widget _buildEmpty(ThemeData theme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.restaurant_menu_outlined,
+            size: 64,
+            color: theme.hintColor.withOpacity(0.4),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No meals found',
+            style: theme.textTheme.headlineMedium?.copyWith(
+              color: theme.hintColor,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text('Start logging your meals!', style: theme.textTheme.bodySmall),
+        ],
+      ),
+    );
   }
 }
 
-// ── Empty state placeholder ────────────────────────────────────────────────────
-//
-// Shown when no meals match the current filter + search combination.
-// A muted icon and message reassure the user that the screen isn't
-// broken — there's just nothing to show.
-class _EmptyState extends StatelessWidget {
-  final TextTheme textTheme;
-  const _EmptyState({required this.textTheme});
+// ── Filter chip ───────────────────────────────────────────────────────────────
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.no_meals_rounded,
-            size: 56,
-            color: Theme.of(context).colorScheme.onSurface.withAlpha(60),
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? colors.primary : theme.cardColor,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: selected ? colors.primary : theme.dividerColor,
+            width: 1,
           ),
-          const SizedBox(height: 12),
-          Text(
-            'No meals found',
-            style: textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withAlpha(120),
-            ),
+        ),
+        child: Text(
+          label,
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: selected ? colors.onPrimary : theme.hintColor,
+            fontWeight: FontWeight.w600,
           ),
-        ],
+        ),
       ),
     );
   }
