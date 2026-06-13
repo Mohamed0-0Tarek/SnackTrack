@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "922855108870",
+    "project_id": "snacktrack-4ac3c",
+    "storage_bucket": "snacktrack-4ac3c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:922855108870:android:020f3d3ef314c681b32e87",
+        "android_client_info": {
+          "package_name": "com.mohamed.snacktrack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCO87nNY5p3sqPnSuGL-INhD7NsWl7c3Bs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

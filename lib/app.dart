@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:health_assistant/controllers/setting_controller.dart';
 import 'package:health_assistant/views/ai/weekly_summary_screen.dart';
+import 'package:health_assistant/views/auth/sign_in_screen.dart';
+import 'package:health_assistant/views/auth/sign_up_screen.dart';
+import 'package:health_assistant/views/onboarding/onboarding_screen.dart';
 import 'package:provider/provider.dart';
 import 'core/constants/app_routes.dart';
 import 'core/theme/app_theme.dart';
@@ -53,12 +56,12 @@ class App extends StatelessWidget {
       child: Consumer<SettingsController>(
         builder: (context, settings, _) => MaterialApp.router(
           debugShowCheckedModeBanner: false,
-          title:        'SnackTrack',
-          theme:        AppTheme.light,
-          darkTheme:    AppTheme.dark,
-          themeMode:    settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          title: 'SnackTrack',
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
           routerConfig: _router,
-        )
+        ),
       ),
     );
   }
@@ -68,7 +71,12 @@ final _router = GoRouter(
   initialLocation: AppRoutes.splash,
   routes: [
     GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
-    GoRoute(path: AppRoutes.auth, builder: (_, __) => const AuthScreen()),
+    GoRoute(path: AppRoutes.signIn, builder: (_, __) => const SignInScreen()),
+    GoRoute(path: AppRoutes.signUp, builder: (_, __) => const SignUpScreen()),
+    GoRoute(
+      path: AppRoutes.onboard,
+      builder: (_, __) => const OnboardingScreen(),
+    ),
     GoRoute(
       path: AppRoutes.main,
       builder: (_, __) => const MainScreen(initialIndex: 0),
@@ -77,7 +85,10 @@ final _router = GoRouter(
       path: AppRoutes.profile,
       builder: (_, __) => const MainScreen(initialIndex: 4),
     ),
-    GoRoute(path: AppRoutes.aiCoach, builder: (_, __) => const AiCoachScreen()), // <── AI Coach
+    GoRoute(
+      path: AppRoutes.aiCoach,
+      builder: (_, __) => const AiCoachScreen(),
+    ), // <── AI Coach
     GoRoute(
       path: AppRoutes.mealHistory,
       builder: (_, __) => const MainScreen(initialIndex: 1),
@@ -87,8 +98,8 @@ final _router = GoRouter(
       builder: (_, __) => const MealAnalysisScreen(),
     ),
     GoRoute(
-  path: AppRoutes.weeklySummary,
-  builder: (_, __) => const WeeklySummaryScreen(),
-),
+      path: AppRoutes.weeklySummary,
+      builder: (_, __) => const WeeklySummaryScreen(),
+    ),
   ],
 );
