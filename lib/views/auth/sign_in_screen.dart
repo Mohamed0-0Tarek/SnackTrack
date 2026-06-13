@@ -18,6 +18,7 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+  final _formKey      = GlobalKey<FormState>();
   final _emailCtrl    = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _obscure       = true;
@@ -31,12 +32,35 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() => _loading = true);
-    // TODO: wire to AuthController
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (mounted) {
-      setState(() => _loading = false);
-      context.go(AppRoutes.main);
+    
+    try {
+      // Wire up directly to AuthController state management
+      await context.read<AuthController>().signIn(
+            _emailCtrl.text.trim(),
+            _passwordCtrl.text,
+          );
+      
+      if (mounted) {
+        context.go(AppRoutes.main);
+      }
+    } catch (e) {
+      if (mounted) {
+        // Provide user feedback when an authentication error occurs
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll(RegExp(r'\[.*\]'), '').trim()),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -59,7 +83,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'SnakeTrack',
+                    'SnackTrack', // Fixed typo
                     style: tt.headlineMedium?.copyWith(
                       color: scheme.primary,
                       fontWeight: FontWeight.w700,
@@ -110,128 +134,157 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                         ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                child: Form(
+                  key: _formKey, // Form wrapper added for input checking
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
 
-                    // Email
-                    Text(
-                      'EMAIL ADDRESS',
-                      style: tt.labelSmall?.copyWith(
-                        letterSpacing: 1.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _InputField(
-                      controller: _emailCtrl,
-                      hint: 'name@example.com',
-                      icon: Icons.mail_outline_rounded,
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Password
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'PASSWORD',
-                          style: tt.labelSmall?.copyWith(
-                            letterSpacing: 1.5,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      // Email
+                      Text(
+                        'EMAIL ADDRESS',
+                        style: tt.labelSmall?.copyWith(
+                          letterSpacing: 1.5,
+                          fontWeight: FontWeight.w600,
                         ),
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {},
-                            borderRadius: BorderRadius.circular(6),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 4, vertical: 2),
-                              child: Text(
-                                'FORGOT?',
-                                style: tt.labelSmall?.copyWith(
-                                  color: scheme.primary,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.2,
+                      ),
+                      const SizedBox(height: 8),
+                      _InputField(
+                        controller: _emailCtrl,
+                        hint: 'name@example.com',
+                        icon: Icons.mail_outline_rounded,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter your email address';
+                          }
+                          if (!value.contains('@') || !value.contains('.')) {
+                            return 'Please enter a valid email address';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Password
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'PASSWORD',
+                            style: tt.labelSmall?.copyWith(
+                              letterSpacing: 1.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                // TODO: Optional forgot password logic hook
+                              },
+                              borderRadius: BorderRadius.circular(6),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 4, vertical: 2),
+                                child: Text(
+                                  'FORGOT?',
+                                  style: tt.labelSmall?.copyWith(
+                                    color: scheme.primary,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.2,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    _InputField(
-                      controller: _passwordCtrl,
-                      hint: '••••••••',
-                      icon: Icons.lock_outline_rounded,
-                      obscure: _obscure,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscure
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          color: scheme.onSurface.withAlpha(100),
-                          size: 18,
-                        ),
-                        onPressed: () => setState(() => _obscure = !_obscure),
+                        ],
                       ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // CTA button
-                    _GradientButton(
-                      label: 'CONTINUE TO DASHBOARD',
-                      icon: Icons.arrow_forward_rounded,
-                      loading: _loading,
-                      onTap: _submit,
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Divider
-                    Row(
-                      children: [
-                        Expanded(
-                            child: Divider(color: Theme.of(context).dividerColor)),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            'OR CONNECT WITH',
-                            style: tt.labelSmall?.copyWith(letterSpacing: 1),
+                      const SizedBox(height: 8),
+                      _InputField(
+                        controller: _passwordCtrl,
+                        hint: '••••••••',
+                        icon: Icons.lock_outline_rounded,
+                        obscure: _obscure,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your password';
+                          }
+                          if (value.length < 6) {
+                            return 'Password must be at least 6 characters';
+                          }
+                          return null;
+                        },
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscure
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: scheme.onSurface.withAlpha(100),
+                            size: 18,
                           ),
+                          onPressed: () => setState(() => _obscure = !_obscure),
                         ),
-                        Expanded(
-                            child: Divider(color: Theme.of(context).dividerColor)),
-                      ],
-                    ),
+                      ),
 
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 24),
 
-                    // Social buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _SocialButton(
-                            label: 'Google',
-                            icon: Icons.g_mobiledata_rounded,
+                      // CTA button
+                      _GradientButton(
+                        label: 'CONTINUE TO DASHBOARD',
+                        icon: Icons.arrow_forward_rounded,
+                        loading: _loading,
+                        onTap: _submit,
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Divider
+                      Row(
+                        children: [
+                          Expanded(
+                              child: Divider(color: Theme.of(context).dividerColor)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              'OR CONNECT WITH',
+                              style: tt.labelSmall?.copyWith(letterSpacing: 1),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _SocialButton(
-                            label: 'Apple',
-                            icon: Icons.apple_rounded,
+                          Expanded(
+                              child: Divider(color: Theme.of(context).dividerColor)),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Social buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _SocialButton(
+                              label: 'Google',
+                              icon: Icons.g_mobiledata_rounded,
+                              onTap: () {
+                                // TODO: Connect Google Sign-In logic
+                              },
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _SocialButton(
+                              label: 'Apple',
+                              icon: Icons.apple_rounded,
+                              onTap: () {
+                                // TODO: Connect Apple Sign-In logic
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -372,14 +425,16 @@ class _InputField extends StatelessWidget {
   final bool obscure;
   final TextInputType? keyboardType;
   final Widget? suffixIcon;
+  final String? Function(String?)? validator;
 
   const _InputField({
     required this.controller,
     required this.hint,
     required this.icon,
-    this.obscure      = false,
+    this.obscure = false,
     this.keyboardType,
     this.suffixIcon,
+    this.validator,
   });
 
   @override
@@ -388,29 +443,43 @@ class _InputField extends StatelessWidget {
     final tt     = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark
+    return TextFormField(
+      controller: controller,
+      obscureText: obscure,
+      keyboardType: keyboardType,
+      style: tt.bodyMedium,
+      validator: validator,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: tt.bodyMedium?.copyWith(
+          color: scheme.onSurface.withAlpha(80),
+        ),
+        prefixIcon: Icon(icon, color: scheme.onSurface.withAlpha(120), size: 18),
+        suffixIcon: suffixIcon,
+        filled: true,
+        fillColor: isDark
             ? scheme.surface.withAlpha(180)
             : scheme.surfaceContainerHighest.withAlpha(60),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).dividerColor),
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscure,
-        keyboardType: keyboardType,
-        style: tt.bodyMedium,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: tt.bodyMedium?.copyWith(
-            color: scheme.onSurface.withAlpha(80),
-          ),
-          prefixIcon: Icon(icon, color: scheme.onSurface.withAlpha(120), size: 18),
-          suffixIcon: suffixIcon,
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Theme.of(context).dividerColor),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Theme.of(context).dividerColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: scheme.primary, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: scheme.error, width: 1),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: scheme.error, width: 1.5),
         ),
       ),
     );
@@ -495,8 +564,13 @@ class _GradientButton extends StatelessWidget {
 class _SocialButton extends StatelessWidget {
   final String label;
   final IconData icon;
+  final VoidCallback onTap;
 
-  const _SocialButton({required this.label, required this.icon});
+  const _SocialButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -510,7 +584,7 @@ class _SocialButton extends StatelessWidget {
           : Colors.white,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        onTap: () {},
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),

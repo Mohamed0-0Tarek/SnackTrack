@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:health_assistant/core/widgets/ai_coach_fab.dart';
-import 'package:health_assistant/views/notufucations/notifications_screen.dart';
+import 'package:health_assistant/views/notufucations/notifications_screen.dart'; 
 import 'core/constants/app_routes.dart';
 import 'core/widgets/bottom_nav_bar.dart';
 import 'views/dashboard/dashboard_screen.dart';
@@ -74,7 +73,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           ),
         ),
         title: Text(
-          'SnakeTrack',
+          'SnackTrack', // Fixed brand name typo
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             color: Theme.of(context).colorScheme.primary,
             fontWeight: FontWeight.bold,
@@ -100,7 +99,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       // ── Floating Action Button → AI Coach ──────────────────────────────────
       floatingActionButton: ScaleTransition(
         scale: _fabScale,
-        child: AiCoachFab(),
+        child: const AiCoachFab(),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
 
