@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_routes.dart';
+import '../../controllers/auth_controller.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // onboarding_screen.dart  (the "Define Your Trajectory" profile setup screen)
@@ -26,14 +29,60 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool   _loading = false;
 
   Future<void> _submit() async {
-    setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (mounted) {
-      setState(() => _loading = false);
-      context.go(AppRoutes.main);
-    }
+  if (_selected == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please select your primary objective to proceed.'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    return;
   }
 
+  setState(() => _loading = true);
+
+  try {
+    final authController = context.read<AuthController>();
+
+    // Parse out UI strings safely
+    String objectiveStr;
+    switch (_selected!) {
+      case _Objective.weightLoss:
+        objectiveStr = 'loss weight';
+        break;
+      case _Objective.muscleGain:
+        objectiveStr = 'build muscle';
+        break;
+      case _Objective.maintenance:
+        objectiveStr = 'maintenance';
+        break;
+    }
+
+    // Call your single central source of truth instead of mutating databases raw from UI views
+    await authController.synchronizeOnboardingProfile(
+      age: _age.round(),
+      weight: double.parse(_weight.toStringAsFixed(1)),
+      height: _height,
+      objective: objectiveStr,
+    );
+
+
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save parameters: ${e.toString()}'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  } finally {
+    if (mounted) {
+      setState(() => _loading = false);
+    }
+  }
+}
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -55,7 +104,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'SnakeTrack',
+                        'SnackTrack', // Fixed brand typo
                         style: tt.headlineMedium?.copyWith(
                           color: scheme.primary,
                           fontWeight: FontWeight.w700,
@@ -271,7 +320,6 @@ class _ObjectiveCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Icon with optional accent border (design shows left border on selected)
               Container(
                 width: 38, height: 38,
                 decoration: BoxDecoration(
@@ -306,7 +354,6 @@ class _ObjectiveCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              // Radio indicator
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: 20, height: 20,
@@ -466,7 +513,6 @@ class _BottomActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tt     = Theme.of(context).textTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
@@ -532,24 +578,7 @@ class _BottomActions extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           // Skip
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => context.go(AppRoutes.main),
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                child: Text(
-                  'SKIP FOR NOW',
-                  style: tt.labelSmall?.copyWith(
-                    letterSpacing: 1.5,
-                    fontWeight: FontWeight.w600,
-                    color: scheme.onSurface.withAlpha(120),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          
         ],
       ),
     );
