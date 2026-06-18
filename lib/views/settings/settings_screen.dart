@@ -18,7 +18,7 @@ class AppSettingsScreen extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final auth = context.read<AuthController>();
-    final settings = context.watch<SettingsController>();
+    final settings = context.watch<SettingController>();
 
     return Scaffold(
       backgroundColor: isDark
@@ -28,7 +28,7 @@ class AppSettingsScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           children: [
-            // Custom AppBar 
+            // Custom AppBar
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -118,11 +118,11 @@ class AppSettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   CustomButton(
-                    label: 'Manage Subscription', 
+                    label: 'Manage Subscription',
                     onPressed: () {},
                     outlined: true,
                     color: Colors.white70,
-                    ),
+                  ),
                 ],
               ),
             ),

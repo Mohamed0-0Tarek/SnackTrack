@@ -55,8 +55,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // `watch` subscribes to [DashboardController] — every time it
     // calls `notifyListeners()`, this build method re-runs.
     final controller = context.watch<DashboardController>();
-    final scheme     = Theme.of(context).colorScheme;
-    final tt         = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
 
     // ── Loading state ──────────────────────────────────────────────────────────
     // Shows the branded pulsing logo overlay while the API call resolves.
@@ -69,9 +69,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // show a simple fallback message.
     final summary = controller.summary;
     if (summary == null) {
-      return Center(
-        child: Text('No data available', style: tt.bodyLarge),
-      );
+      return Center(child: Text('No data available', style: tt.bodyLarge));
     }
 
     // ── Main scrollable content ────────────────────────────────────────────────
@@ -81,7 +79,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.paddingMD,
-        vertical:   AppDimensions.paddingSM,
+        vertical: AppDimensions.paddingSM,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,7 +91,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           CalorieRingWidget(
             consumed: summary.totalCalories,
             exercise: summary.exerciseCalories,
-            goal:     summary.calorieGoal,
+            goal: summary.calorieGoal,
           ),
 
           const SizedBox(height: 28),
@@ -106,10 +104,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Protein — primary (cyan/teal) accent
               Expanded(
                 child: MacroCard(
-                  label:     'PROTEIN',
-                  value:     '${summary.totalProtein.round()}g',
-                  progress:  summary.totalProtein / summary.proteinGoal,
-                  color:     scheme.primary,
+                  label: 'PROTEIN',
+                  value: '${summary.totalProtein.round()}g',
+                  progress: summary.totalProtein / summary.proteinGoal,
+                  color: scheme.primary,
                   iconAsset: 'assets/images/protein.png',
                 ),
               ),
@@ -118,10 +116,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Carbs — tertiary (lavender/blue) accent
               Expanded(
                 child: MacroCard(
-                  label:     'CARBS',
-                  value:     '${summary.totalCarbs.round()}g',
-                  progress:  summary.totalCarbs / summary.carbsGoal,
-                  color:     scheme.tertiary,
+                  label: 'CARBS',
+                  value: '${summary.totalCarbs.round()}g',
+                  progress: summary.totalCarbs / summary.carbsGoal,
+                  color: scheme.tertiary,
                   iconAsset: 'assets/images/carbs.png',
                 ),
               ),
@@ -130,10 +128,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Fats — secondary (purple) accent
               Expanded(
                 child: MacroCard(
-                  label:     'FATS',
-                  value:     '${summary.totalFat.round()}g',
-                  progress:  summary.totalFat / summary.fatGoal,
-                  color:     scheme.secondary,
+                  label: 'FATS',
+                  value: '${summary.totalFat.round()}g',
+                  progress: summary.totalFat / summary.fatGoal,
+                  color: scheme.secondary,
                   iconAsset: 'assets/images/fats.png',
                 ),
               ),
@@ -146,9 +144,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // Hard-coded text for now; in production this would come from
           // [AiController.latestAnalysis].
           const SmartAnalysisCard(
-            text: 'You\'re nearing your carb limit but have 35g of protein to '
-                  'spare. For dinner, consider a grilled salmon salad to hit '
-                  'your macro targets!',
+            text:
+                'You\'re nearing your carb limit but have 35g of protein to '
+                'spare. For dinner, consider a grilled salmon salad to hit '
+                'your macro targets!',
           ),
 
           const SizedBox(height: 28),
@@ -172,7 +171,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               foodName: meal.name,
               calories: meal.calories,
               loggedAt: meal.loggedAt,
-              isLast:   i == summary.meals.length - 1,
+              isLast: i == summary.meals.length - 1,
             );
           }),
 
