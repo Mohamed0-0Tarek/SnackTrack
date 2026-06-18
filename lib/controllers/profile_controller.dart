@@ -16,7 +16,7 @@ class ProfileController extends ChangeNotifier {
     try {
       final data = StorageService.getUser();
       if (data != null) {
-        profile = UserModel.fromJson(Map<String, dynamic>.from(data));
+        profile = UserModel.fromJson(Map<String, dynamic>.from(data.toJson()));
       }
     } catch (e) {
       // Handle error silently or log if needed

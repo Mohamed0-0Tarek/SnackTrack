@@ -1,19 +1,43 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-class UserModel {
+import 'package:hive/hive.dart';
+
+part 'user_model.g.dart';
+
+/// Same UserModel as before — fromJson/toJson/copyWith are unchanged so
+/// every existing call site (AuthController, ProfileController, etc.)
+/// keeps working without edits. The only addition is Hive annotations so
+/// StorageService can cache this object directly instead of as a raw Map.
+///
+/// typeId 0 — keep this distinct from SettingsModel's typeId 1.
+///
+/// NOTE: after adding this, run:
+///   flutter packages pub run build_runner build
+/// to generate user_model.g.dart.
+@HiveType(typeId: 0)
+class UserModel extends HiveObject {
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String name;
+  @HiveField(2)
   final String email;
+  @HiveField(3)
   final String avatarUrl;
+  @HiveField(4)
   final String token;
+  @HiveField(5)
   final int activeStreak;
+  @HiveField(6)
   final int entries;
+  @HiveField(7)
   final String bio;
-  
-  // Onboarding fields (made nullable so they are safe before onboarding is finished)
+  @HiveField(8)
   final int? age;
+  @HiveField(9)
   final double? weight;
+  @HiveField(10)
   final double? height;
-  final String? objective; // e.g., 'loss weight', 'build muscle'
+  @HiveField(11)
+  final String? objective;
 
   UserModel({
     required this.id,
@@ -30,7 +54,6 @@ class UserModel {
     this.objective,
   });
 
-  // Factory to parse incoming API / Firestore JSON data
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'] ?? '',
@@ -48,7 +71,6 @@ class UserModel {
     );
   }
 
-  // Convert model data into JSON format to write to Firestore
   Map<String, dynamic> toJson() {
     return {
       'id': id,

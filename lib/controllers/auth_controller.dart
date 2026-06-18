@@ -1,61 +1,67 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Added for direct Firestore orchestration
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' show User;
 import '../models/user_model.dart';
-import '../services/auth_service.dart';
+import '../services/firebase_auth_service.dart';
 
+/// Auth state for the whole app, now driven by Firebase's actual session
+/// state rather than only being set after a manual signIn() call.
+///
+/// ## What changed vs the old AuthController
+/// Previously `user` was only ever assigned inside `signIn()`/`signUp()`.
+/// That meant on a cold app start (even with a valid persisted Firebase
+/// session) `user` stayed null until the person logged in again — the
+/// splash/router had to fall back to checking a Hive token instead.
+///
+/// Now [_listenToAuthChanges] subscribes to
+/// [FirebaseAuthService.authStateChanges] once, in the constructor, and
+/// keeps [user] in sync automatically for the lifetime of the app —
+/// including on cold start, since Firebase persists its own session.
 class AuthController extends ChangeNotifier {
-  final AuthService _authService;
-  AuthController(this._authService);
+  final FirebaseAuthService _authService;
+  AuthController(this._authService) {
+    _listenToAuthChanges();
+  }
 
   UserModel? user;
-  bool   isLoading = false;
+  bool isLoading = false;
   String? error;
 
-  /// Communicates with AuthService to execute user login.
+  /// True once the first authStateChanges event has been processed.
+  /// The splash screen waits on this before deciding where to route —
+  /// without it, there's a brief window where `user == null` could mean
+  /// either "definitely logged out" or "haven't checked yet".
+  bool isInitialized = false;
+
+  Future<void> _listenToAuthChanges() async {
+    _authService.authStateChanges.listen((User? firebaseUser) async {
+      if (firebaseUser == null) {
+        user = null;
+        isInitialized = true;
+        notifyListeners();
+        return;
+      }
+
+      try {
+        user = await _authService.fetchUserProfile(firebaseUser);
+      } catch (e) {
+        error = e.toString();
+      } finally {
+        isInitialized = true;
+        notifyListeners();
+      }
+    });
+  }
+
   Future<void> signIn(String email, String password) async {
-    isLoading = true; 
-    error = null; 
-    notifyListeners();
-    
-    try {
-      user = await _authService.login(email, password);
-    } catch (e) {
-      error = e.toString();
-      // Rethrow lets the UI's local try-catch intercept the error 
-      // and present an accurate SnackBar message to the user.
-      rethrow; 
-    } finally {
-      isLoading = false; 
-      notifyListeners();
-    }
-  }
-
-  /// Communicates with AuthService to create a new user profile document.
-  Future<void> signUp(String name, String email, String password) async {
-    isLoading = true; 
-    error = null; 
-    notifyListeners();
-    
-    try {
-      user = await _authService.signup(name, email, password);
-    } catch (e) {
-      error = e.toString();
-      rethrow; 
-    } finally {
-      isLoading = false; 
-      notifyListeners();
-    }
-  }
-
-  /// Terminates user active session cleanly.
-  Future<void> logout() async {
     isLoading = true;
+    error = null;
     notifyListeners();
-    
     try {
-      await _authService.logout();
-      user = null;
-      error = null;
+      user = await _authService.signIn(email, password);
+      // _listenToAuthChanges will also fire and re-set `user`, which is
+      // fine — it's idempotent. Setting it here too means the UI doesn't
+      // wait an extra stream tick before navigating.
     } catch (e) {
       error = e.toString();
       rethrow;
@@ -65,8 +71,62 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  /// Synchronizes physiological statistics and primary objective metrics
-  /// across both Cloud Firestore and local in-memory application states.
+  Future<void> signUp(String name, String email, String password) async {
+    isLoading = true;
+    error = null;
+    notifyListeners();
+    try {
+      user = await _authService.signUp(name, email, password);
+    } catch (e) {
+      error = e.toString();
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> logout() async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      await _authService.signOut();
+      // user is cleared by the authStateChanges listener automatically.
+    } catch (e) {
+      error = e.toString();
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> sendPasswordReset(String email) async {
+    isLoading = true;
+    error = null;
+    notifyListeners();
+    try {
+      await _authService.sendPasswordResetEmail(email);
+    } catch (e) {
+      error = e.toString();
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> sendEmailVerification() async {
+    try {
+      await _authService.sendEmailVerification();
+    } catch (e) {
+      error = e.toString();
+      rethrow;
+    }
+  }
+
+  bool get isEmailVerified => _authService.isEmailVerified;
+
   Future<void> synchronizeOnboardingProfile({
     required int age,
     required double weight,
@@ -82,31 +142,24 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1. Mutate the targeted document properties on the remote cloud database
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user!.id)
-          .update({
+      await FirebaseFirestore.instance.collection('users').doc(user!.id).update({
         'age': age,
         'weight': weight,
         'height': height,
         'objective': objective,
       });
 
-      // 2. Clone and update the local state memory model using copyWith
       user = user!.copyWith(
         age: age,
         weight: weight,
         height: height,
         objective: objective,
       );
-      
     } catch (e) {
       error = e.toString();
       rethrow;
     } finally {
       isLoading = false;
-      // 3. Inform the GoRouter refreshListenable middle layer that state has changed,
       notifyListeners();
     }
   }

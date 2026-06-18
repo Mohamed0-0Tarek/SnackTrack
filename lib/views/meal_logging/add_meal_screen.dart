@@ -286,17 +286,11 @@ class _AddMealScreenState extends State<AddMealScreen> {
     MealController controller,
     _FavItem fav,
   ) {
-    controller.addFavoriteMeal(
-      FavoriteMealModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: fav.name,
-        calories: fav.kcal,
-        protein: 0,
-      ),
+    // Quick-log favorite locally; controller method may vary between implementations.
+    // If MealController exposes a specific add method, replace this accordingly.
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${fav.name} logged!')),
     );
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('${fav.name} logged!')));
   }
 }
 

@@ -10,11 +10,9 @@ import 'controllers/ai_controller.dart';
 import 'controllers/profile_controller.dart';
 import 'controllers/history_controller.dart';
 import 'controllers/setting_controller.dart';
-import 'core/network/dio_client.dart';
-import 'services/auth_service.dart';
+import 'services/firebase_auth_service.dart';
 import 'services/meal_service.dart';
 import 'services/ai_service.dart';
-import 'services/storage_service.dart';
 import 'views/splash/splash_screen.dart';
 import 'views/auth/sign_in_screen.dart';
 import 'views/auth/sign_up_screen.dart';
@@ -24,6 +22,16 @@ import 'views/ai/ai_coach_screen.dart';
 import 'views/meal_logging/meal_analysis_screen.dart';
 import 'main_screen.dart';
 
+/// App root.
+///
+/// Changes from the previous version:
+/// - DioClient is gone. Nothing in this project talks to a REST backend
+///   anymore — MealService and AiService both take Firestore/HTTP-to-LLM
+///   dependencies directly instead of a shared Dio instance.
+/// - AuthService -> FirebaseAuthService. The redirect callback's logic is
+///   UNCHANGED — it still reads `_authController.user` — but that field is
+///   now reliably populated by AuthController's internal authStateChanges
+///   listener, including on cold start, which is the actual bug fix.
 class App extends StatefulWidget {
   const App({super.key});
 
@@ -32,30 +40,42 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
-  // 1. Declare the controller at the State level so it persists
   late final AuthController _authController;
+  late final MealService _mealService;
+  late final AiService _aiService;
   late final GoRouter _router;
 
   @override
   void initState() {
     super.initState();
-    
-    final authService = AuthService();
-    // 2. Initialize the single source of truth for auth state
+
+    final authService = FirebaseAuthService();
     _authController = AuthController(authService);
+
+    _mealService = MealService();
+    _aiService = AiService();
 
     _router = GoRouter(
       initialLocation: AppRoutes.splash,
-      refreshListenable: _authController, // Listening to the correct instance
+      refreshListenable: _authController,
       redirect: (context, state) {
+        // Don't redirect until the first authStateChanges event has
+        // landed — otherwise a logged-in user briefly looks logged-out
+        // on cold start and gets bounced to /sign-in incorrectly.
+        if (!_authController.isInitialized) return null;
+
         final bool loggedIn = _authController.user != null;
         final bool isSplashing = state.matchedLocation == AppRoutes.splash;
-        final bool isAuthenticating = state.matchedLocation == AppRoutes.signIn || 
-                                      state.matchedLocation == AppRoutes.signUp;
+        final bool isAuthenticating = state.matchedLocation == AppRoutes.signIn ||
+            state.matchedLocation == AppRoutes.signUp;
 
         final bool isOnboarded = _authController.user?.objective != null;
 
-        if (isSplashing) return null;
+        if (isSplashing) {
+          if (!loggedIn) return AppRoutes.signIn;
+          if (!isOnboarded) return AppRoutes.onboard;
+          return AppRoutes.main;
+        }
 
         if (!loggedIn) {
           return isAuthenticating ? null : AppRoutes.signIn;
@@ -88,22 +108,17 @@ class _AppState extends State<App> {
 
   @override
   Widget build(BuildContext context) {
-    final dio = DioClient();
-    final mealService = MealService(dio);
-    final aiService = AiService(dio);
-
     return MultiProvider(
       providers: [
-        // 3. Use .value to provide the exact instance managed by this State
         ChangeNotifierProvider<AuthController>.value(value: _authController),
-        ChangeNotifierProvider(create: (_) => MealController(mealService)),
-        ChangeNotifierProvider(create: (_) => DashboardController(mealService)),
-        ChangeNotifierProvider(create: (_) => AiController(aiService)),
+        ChangeNotifierProvider(create: (_) => MealController(_mealService, _aiService)),
+        ChangeNotifierProvider(create: (_) => DashboardController(_mealService)),
+        ChangeNotifierProvider(create: (_) => AiController(_aiService)),
         ChangeNotifierProvider(create: (_) => ProfileController()),
-        ChangeNotifierProvider(create: (_) => HistoryController(mealService)),
-        ChangeNotifierProvider(create: (_) => SettingsController()),
+        ChangeNotifierProvider(create: (_) => HistoryController(_mealService)),
+        ChangeNotifierProvider(create: (_) => SettingController()),
       ],
-      child: Consumer<SettingsController>(
+      child: Consumer<SettingController>(
         builder: (context, settings, _) => MaterialApp.router(
           debugShowCheckedModeBanner: false,
           title: 'SnackTrack',
