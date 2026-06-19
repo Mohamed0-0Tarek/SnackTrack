@@ -2,9 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/history_controller.dart';
 import '../../models/daily_summary_model.dart';
-import '../../models/meal_model.dart';
 import 'widgets/meal_card.dart';
 
+/// ## What changed in this file
+/// Removed `_mealImages` / `_imageFor()` — that lookup only matched the
+/// three hardcoded dummy-data meal names ('grilled salmon & avocado',
+/// etc.). Real meals now come from Gemini-generated names via
+/// HistoryController's live Firestore path, so the map would almost
+/// never hit. `MealCard` already renders a placeholder icon when
+/// `imagePath` is null, so this is a clean removal — no behavior change
+/// for real data, just deleting a lookup that no longer does anything
+/// useful.
 class MealHistoryScreen extends StatefulWidget {
   const MealHistoryScreen({super.key});
 
@@ -14,14 +22,6 @@ class MealHistoryScreen extends StatefulWidget {
 
 class _MealHistoryScreenState extends State<MealHistoryScreen> {
   final _searchCtrl = TextEditingController();
-
-  static const Map<String, String> _mealImages = {
-    'grilled salmon & avocado': 'assets/images/grilled_salmon_avocado.png',
-    'berry blast smoothie bowl': 'assets/images/berry_blast_smoothie.png',
-    'spicy ahi poke bowl': 'assets/images/spicy_ahi_poke.png',
-  };
-
-  String? _imageFor(MealModel meal) => _mealImages[meal.name.toLowerCase()];
 
   @override
   void initState() {
@@ -109,7 +109,11 @@ class _MealHistoryScreenState extends State<MealHistoryScreen> {
                             lastDate: DateTime.now(),
                           );
                           if (picked != null) {
-                            // TODO: فلتر بالتاريخ لما الباك يكون جاهز
+                            // NOTE: real date-range filtering by the
+                            // exact picked date isn't implemented yet —
+                            // this still only resets to the Today filter.
+                            // Leaving as a known gap rather than expanding
+                            // scope in this change.
                             controller.setFilter(HistoryFilter.today);
                           }
                         },
@@ -143,6 +147,8 @@ class _MealHistoryScreenState extends State<MealHistoryScreen> {
             Expanded(
               child: controller.isLoading
                   ? const Center(child: CircularProgressIndicator())
+                  : controller.error != null
+                  ? _buildError(theme, controller)
                   : controller.filtered.isEmpty
                   ? _buildEmpty(theme)
                   : ListView.builder(
@@ -175,9 +181,7 @@ class _MealHistoryScreenState extends State<MealHistoryScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        ...summary.meals.map(
-          (meal) => MealCard(meal: meal, imagePath: _imageFor(meal)),
-        ),
+        ...summary.meals.map((meal) => MealCard(meal: meal)),
         const SizedBox(height: 8),
       ],
     );
@@ -202,6 +206,31 @@ class _MealHistoryScreenState extends State<MealHistoryScreen> {
           ),
           const SizedBox(height: 8),
           Text('Start logging your meals!', style: theme.textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildError(ThemeData theme, HistoryController controller) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline_rounded,
+            size: 48,
+            color: theme.colorScheme.error.withOpacity(0.6),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            controller.error!,
+            style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => controller.loadHistory(),
+            child: const Text('Retry'),
+          ),
         ],
       ),
     );
