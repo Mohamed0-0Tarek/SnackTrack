@@ -19,20 +19,6 @@ enum HistoryFilter { today, week, month }
 
 enum MealInputMethod { text, photo, barcode, voice }
 
-class FavoriteMealModel {
-  final String id;
-  final String name;
-  final int calories;
-  final double protein;
-
-  const FavoriteMealModel({
-    required this.id,
-    required this.name,
-    required this.calories,
-    required this.protein,
-  });
-}
-
 class MealController extends ChangeNotifier {
   final MealService _mealService;
   final AiService _aiService;
@@ -61,8 +47,6 @@ class MealController extends ChangeNotifier {
       analyzedMeal = await _aiService.analyzeMeal(description);
       return true;
     } catch (e) {
-      // TEMPORARY debug line — remove once the real cause is found.
-      print('REAL ANALYZE ERROR: $e');
       analysisError = 'Could not analyze meal. Try again.';
       return false;
     } finally {
@@ -184,30 +168,9 @@ class MealController extends ChangeNotifier {
     return '${days[dt.weekday - 1]}, ${months[dt.month - 1]} ${dt.day}';
   }
 
-  /// Quick-favorites: real distinct recent meal names from Firestore
-  /// (Phase 2.3) — replaces what used to be a manual single-meal log.
+  /// Quick-favorites: real distinct recent meal names from Firestore.
+  /// AddMealScreen re-runs analyzeMeal() on the chosen name rather than
+  /// reusing a stored calorie value — only the name is cached here, not
+  /// full nutrition data, so a fresh AI analysis is the honest path.
   Future<List<String>> getQuickFavorites() => _mealService.getRecentDistinctMealNames();
-
-  Future<void> logFavoriteMeal(FavoriteMealModel favorite) async {
-    isLoading = true;
-    notifyListeners();
-    try {
-      final meal = MealModel(
-        id: '',
-        name: favorite.name,
-        calories: favorite.calories,
-        protein: favorite.protein,
-        carbs: 0,
-        fat: 0,
-        loggedAt: DateTime.now(),
-        analyzedBy: 'favorite',
-      );
-      await _mealService.saveMeal(meal);
-    } catch (e) {
-      error = 'Could not log meal.';
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
 }
