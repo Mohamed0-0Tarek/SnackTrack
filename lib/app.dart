@@ -43,7 +43,10 @@ class _AppState extends State<App> {
   late final AuthController _authController;
   late final MealService _mealService;
   late final AiService _aiService;
+  late final SettingController _settingController;
   late final GoRouter _router;
+
+  String? _lastKnownUid;
 
   @override
   void initState() {
@@ -54,6 +57,14 @@ class _AppState extends State<App> {
 
     _mealService = MealService();
     _aiService = AiService();
+    _settingController = SettingController();
+
+    // SettingController's constructor calls loadSettings() once, but at
+    // cold start Firebase auth may not have resolved yet — that call
+    // would only load Hive/defaults, not Firestore. Reload settings
+    // whenever auth transitions from signed-out to signed-in, so the
+    // Firestore sync actually runs once a uid is available.
+    _authController.addListener(_onAuthChanged);
 
     _router = GoRouter(
       initialLocation: AppRoutes.splash,
@@ -106,6 +117,22 @@ class _AppState extends State<App> {
     );
   }
 
+  void _onAuthChanged() {
+    final currentUid = _authController.user?.id;
+    if (currentUid != null && currentUid != _lastKnownUid) {
+      // Transitioned into a signed-in state (or switched accounts) —
+      // reload settings so the Firestore sync runs with a real uid.
+      _settingController.loadSettings();
+    }
+    _lastKnownUid = currentUid;
+  }
+
+  @override
+  void dispose() {
+    _authController.removeListener(_onAuthChanged);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -116,7 +143,7 @@ class _AppState extends State<App> {
         ChangeNotifierProvider(create: (_) => AiController(_aiService)),
         ChangeNotifierProvider(create: (_) => ProfileController()),
         ChangeNotifierProvider(create: (_) => HistoryController(_mealService)),
-        ChangeNotifierProvider(create: (_) => SettingController()),
+        ChangeNotifierProvider<SettingController>.value(value: _settingController),
       ],
       child: Consumer<SettingController>(
         builder: (context, settings, _) => MaterialApp.router(
