@@ -143,7 +143,7 @@ Today's meals: $summary
     return json['tip'] as String? ?? 'Keep logging meals to get personalized tips.';
   }
 
-  /// Weekly pattern insights — used by Phase 7's AI coach habit cards.
+  /// Weekly pattern insights — used by AI coach habit cards.
   Future<List<String>> getHabitInsights(List<MealModel> weeklyMeals) async {
     final summary = weeklyMeals.map((m) => '${m.type} on ${m.loggedAt.weekday}').join(', ');
 
@@ -157,5 +157,36 @@ Logs: $summary
     final json = await _callModel(prompt);
     final insights = json['insights'] as List?;
     return insights?.map((e) => e.toString()).toList() ?? [];
+  }
+
+  /// Weekly Oracle Verdict — health grade + recommendations for the
+  /// weekly report screen. Returns a Map with keys:
+  ///   "grade"           → string e.g. "B+"
+  ///   "summary"         → one sentence metabolic overview
+  ///   "recommendations" → list of 3 short strings
+  Future<Map<String, dynamic>> getWeeklyOracleVerdict(dynamic report) async {
+    final avgCal = report.avgCalories;
+    final protein = report.totalProtein.toStringAsFixed(0);
+    final carbs = report.totalCarbs.toStringAsFixed(0);
+    final fat = report.totalFat.toStringAsFixed(0);
+    final topMeal = report.topMealByCalories?.name ?? 'unknown';
+
+    final prompt = '''
+You are a nutrition oracle. Given this user's weekly nutritional data,
+respond with ONLY a JSON object (no markdown):
+{"grade": string, "summary": string, "recommendations": [string, string, string]}
+
+- grade: A letter grade A-F with optional +/- (e.g. "B+")
+- summary: one sentence metabolic overview
+- recommendations: exactly 3 short, actionable nutrition tips
+
+Weekly data:
+- Average daily calories: $avgCal kcal
+- Total protein: ${protein}g
+- Total carbs: ${carbs}g
+- Total fat: ${fat}g
+- Highest calorie meal this week: $topMeal
+''';
+    return await _callModel(prompt);
   }
 }
