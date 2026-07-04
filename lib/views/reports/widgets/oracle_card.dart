@@ -1,7 +1,20 @@
 import 'package:flutter/material.dart';
 
+/// AI Oracle verdict card — now driven by real data from
+/// WeeklyReportController's AI oracle call instead of hardcoded text.
 class OracleCard extends StatelessWidget {
-  const OracleCard({super.key});
+  final String? grade;
+  final String? summary;
+  final List<String> recommendations;
+  final bool isLoading;
+
+  const OracleCard({
+    super.key,
+    required this.grade,
+    required this.summary,
+    required this.recommendations,
+    required this.isLoading,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -10,81 +23,93 @@ class OracleCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: scheme.primary.withAlpha(70)),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withAlpha(20),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [
+            scheme.primary.withAlpha(isDark ? 60 : 30),
+            scheme.secondary.withAlpha(isDark ? 60 : 30),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: scheme.primary.withAlpha(80)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: scheme.primary.withAlpha(40),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.auto_awesome,
+              Icon(Icons.auto_awesome, color: scheme.primary, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'ORACLE VERDICT',
+                style: tt.labelSmall?.copyWith(
                   color: scheme.primary,
-                  size: 16,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
                 ),
               ),
-              const SizedBox(width: 8),
-              Text('Digital Oracle Analysis', style: tt.headlineMedium),
             ],
           ),
-          const SizedBox(height: 14),
-          RichText(
-            text: TextSpan(
-              style: tt.bodyMedium,
+          const SizedBox(height: 16),
+
+          if (isLoading) ...[
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          ] else ...[
+            // Grade
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const TextSpan(text: 'Your '),
-                TextSpan(
-                  text: 'thermic effect of food (TEF)',
-                  style: TextStyle(
+                Text(
+                  grade ?? '—',
+                  style: tt.displayLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
                     color: scheme.primary,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 56,
+                    height: 1,
                   ),
                 ),
-                const TextSpan(
-                  text:
-                      ' was optimized this week by increasing protein intake during your first meal. This shift correlates with a 15% reduction in afternoon lethargy reports.',
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text(
+                      summary ?? 'Not enough data this week.',
+                      style: tt.bodyMedium,
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'The weight fluctuation observed on Wednesday (Day 3) is categorized as transient water retention, likely due to the sodium-rich meal logged on Tuesday night. By Thursday, your baseline trend returned to the projected trajectory.',
-            style: tt.bodyMedium,
-          ),
-          const SizedBox(height: 14),
-          Text(
-            'RECOMMENDATION:',
-            style: tt.labelSmall?.copyWith(
-              color: scheme.primary,
-              letterSpacing: 1.5,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            '"Maintain current macros for another 4 days to solidify this metabolic floor before adjusting deficit variables."',
-            style: tt.bodyMedium?.copyWith(fontStyle: FontStyle.italic),
-          ),
+
+            if (recommendations.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              ...recommendations.map(
+                (rec) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.chevron_right,
+                          color: scheme.primary, size: 18),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(rec, style: tt.bodySmall),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
         ],
       ),
     );

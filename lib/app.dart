@@ -6,6 +6,8 @@ import 'core/theme/app_theme.dart';
 import 'controllers/auth_controller.dart';
 import 'controllers/meal_controller.dart';
 import 'controllers/dashboard_controller.dart';
+import 'controllers/weekly_report_controller.dart';
+import 'services/weekly_report_service.dart';
 import 'controllers/ai_controller.dart';
 import 'controllers/profile_controller.dart';
 import 'controllers/history_controller.dart';
@@ -72,6 +74,7 @@ class _AppState extends State<App> {
   late final MealService _mealService;
   late final AiService _aiService;
   late final SettingController _settingController;
+  late final WeeklyReportService _weeklyReportService;
   late final GoRouter _router;
 
   String? _lastKnownUid;
@@ -85,6 +88,7 @@ class _AppState extends State<App> {
 
     _mealService = MealService();
     _aiService = AiService();
+    _weeklyReportService = WeeklyReportService();
     _settingController = SettingController();
 
     // SettingController's constructor calls loadSettings() once, but at
@@ -167,8 +171,9 @@ class _AppState extends State<App> {
       providers: [
         ChangeNotifierProvider<AuthController>.value(value: _authController),
         ChangeNotifierProvider(create: (_) => MealController(_mealService, _aiService)),
-        ChangeNotifierProvider(create: (_) => DashboardController(_mealService)),
+        ChangeNotifierProvider(create: (_) => DashboardController(_mealService,_aiService)),
         ChangeNotifierProvider(create: (_) => AiController(_aiService)),
+        ChangeNotifierProvider(create: (_) => WeeklyReportController(_weeklyReportService, _aiService)),
         ChangeNotifierProvider(create: (_) => ProfileController()),
         ChangeNotifierProvider(create: (_) => HistoryController(_mealService)),
         ChangeNotifierProvider<SettingController>.value(value: _settingController),
