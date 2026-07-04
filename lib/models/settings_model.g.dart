@@ -24,13 +24,17 @@ class SettingsModelAdapter extends TypeAdapter<SettingsModel> {
       goalProtein: fields[4] as double,
       goalCarbs: fields[5] as double,
       goalFat: fields[6] as double,
+      textSize: fields[7] as double? ?? 1,
+      highContrast: fields[8] as bool? ?? false,
+      voiceSensitivity: fields[9] as int? ?? 1,
+      adaptiveAssist: fields[10] as bool? ?? false,
     );
   }
 
   @override
   void write(BinaryWriter writer, SettingsModel obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.darkMode)
       ..writeByte(1)
@@ -44,7 +48,15 @@ class SettingsModelAdapter extends TypeAdapter<SettingsModel> {
       ..writeByte(5)
       ..write(obj.goalCarbs)
       ..writeByte(6)
-      ..write(obj.goalFat);
+      ..write(obj.goalFat)
+      ..writeByte(7)
+      ..write(obj.textSize)
+      ..writeByte(8)
+      ..write(obj.highContrast)
+      ..writeByte(9)
+      ..write(obj.voiceSensitivity)
+      ..writeByte(10)
+      ..write(obj.adaptiveAssist);
   }
 
   @override

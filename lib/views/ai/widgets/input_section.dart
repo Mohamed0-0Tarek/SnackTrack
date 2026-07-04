@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class InputSection extends StatelessWidget {
+  const InputSection({super.key});
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -80,7 +82,7 @@ class InputSection extends StatelessWidget {
 
 class QuickChip extends StatelessWidget {
   final String label;
-  const QuickChip({required this.label});
+  const QuickChip({super.key, required this.label});
 
   @override
   Widget build(BuildContext context) {

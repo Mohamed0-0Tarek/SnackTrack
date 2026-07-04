@@ -3,6 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/constants/app_routes.dart';
+import 'widgets/social_button.dart';
+import 'widgets/input_field.dart';
+import 'widgets/field_label.dart';
+import 'widgets/gradient_button.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // sign_up_screen.dart
@@ -173,9 +177,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     children: [
 
                       // Full name
-                      _FieldLabel('FULL NAME'),
+                      FieldLabel('FULL NAME'),
                       const SizedBox(height: 8),
-                      _InputField(
+                      InputField(
                         controller: _nameCtrl,
                         hint: 'Alex Thorne',
                         icon: Icons.person_outline_rounded,
@@ -191,9 +195,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 16),
 
                       // Email
-                      _FieldLabel('EMAIL ADDRESS'),
+                      FieldLabel('EMAIL ADDRESS'),
                       const SizedBox(height: 8),
-                      _InputField(
+                      InputField(
                         controller: _emailCtrl,
                         hint: 'name@example.com',
                         icon: Icons.mail_outline_rounded,
@@ -212,9 +216,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 16),
 
                       // Password
-                      _FieldLabel('PASSWORD'),
+                      FieldLabel('PASSWORD'),
                       const SizedBox(height: 8),
-                      _InputField(
+                      InputField(
                         controller: _passwordCtrl,
                         hint: '••••••••',
                         icon: Icons.lock_outline_rounded,
@@ -244,9 +248,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 16),
 
                       // Confirm password
-                      _FieldLabel('CONFIRM PASSWORD'),
+                      FieldLabel('CONFIRM PASSWORD'),
                       const SizedBox(height: 8),
-                      _InputField(
+                      InputField(
                         controller: _confirmCtrl,
                         hint: '••••••••',
                         icon: Icons.lock_outline_rounded,
@@ -339,12 +343,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 24),
 
                       // CTA button
-                      _GradientButton(
+                      GradientButton(
                         label: 'INITIALIZE PROFILE',
                         icon: Icons.arrow_forward_rounded,
-                        loading: _loading,
+                        isLoading: _loading,
                         enabled: _agreedTerms,
-                        onTap: _submit, // Safe internal checking handles validation
+                        primary: scheme.primary,
+                        secondary: scheme.secondary,
+                        onTap: _submit,
                       ),
 
                       const SizedBox(height: 20),
@@ -374,22 +380,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: _SocialButton(
+                            child: SocialButton(
                               label: 'Google',
                               icon: Icons.g_mobiledata_rounded,
                               onTap: () {
                                 // TODO: Connect Google Sign-Up logic
-                              },
+                              }, isDark: isDark,
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: _SocialButton(
+                            child: SocialButton(
                               label: 'Apple',
                               icon: Icons.apple_rounded,
                               onTap: () {
                                 // TODO: Connect Apple Sign-Up logic
-                              },
+                              }, isDark: isDark,
                             ),
                           ),
                         ],
@@ -431,222 +437,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
 
               const SizedBox(height: 24),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Field label helper ───────────────────────────────────────────────────────
-class _FieldLabel extends StatelessWidget {
-  final String text;
-  const _FieldLabel(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        letterSpacing: 1.5,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Shared widgets
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _InputField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-  final IconData icon;
-  final bool obscure;
-  final TextInputType? keyboardType;
-  final Widget? suffixIcon;
-  final String? Function(String?)? validator;
-
-  const _InputField({
-    required this.controller,
-    required this.hint,
-    required this.icon,
-    this.obscure = false,
-    this.keyboardType,
-    this.suffixIcon,
-    this.validator,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tt     = Theme.of(context).textTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return TextFormField(
-      controller: controller,
-      obscureText: obscure,
-      keyboardType: keyboardType,
-      style: tt.bodyMedium,
-      validator: validator,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: tt.bodyMedium?.copyWith(
-          color: scheme.onSurface.withAlpha(80),
-        ),
-        prefixIcon:
-            Icon(icon, color: scheme.onSurface.withAlpha(120), size: 18),
-        suffixIcon: suffixIcon,
-        filled: true,
-        fillColor: isDark
-            ? scheme.surface.withAlpha(180)
-            : scheme.surfaceContainerHighest.withAlpha(60),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).dividerColor),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).dividerColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: scheme.primary, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: scheme.error, width: 1),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: scheme.error, width: 1.5),
-        ),
-      ),
-    );
-  }
-}
-
-class _GradientButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool loading;
-  final bool enabled;
-  final VoidCallback onTap;
-
-  const _GradientButton({
-    required this.label,
-    required this.icon,
-    required this.loading,
-    required this.onTap,
-    this.enabled = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tt     = Theme.of(context).textTheme;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: (loading || !enabled) ? null : onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: enabled
-                  ? [scheme.primary, scheme.secondary]
-                  : [
-                      scheme.onSurface.withAlpha(50),
-                      scheme.onSurface.withAlpha(40),
-                    ],
-              begin: Alignment.centerLeft,
-              end:   Alignment.centerRight,
-            ),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: enabled
-                ? [
-                    BoxShadow(
-                      color: scheme.primary.withAlpha(80),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
-          ),
-          child: SizedBox(
-            height: 52,
-            child: Center(
-              child: loading
-                  ? const SizedBox(
-                      width: 22, height: 22,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          label,
-                          style: tt.labelLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Icon(icon, color: Colors.white, size: 18),
-                      ],
-                    ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SocialButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _SocialButton({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tt     = Theme.of(context).textTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Material(
-      color: isDark ? scheme.surface.withAlpha(180) : Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Theme.of(context).dividerColor),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: scheme.onSurface.withAlpha(180), size: 20),
-              const SizedBox(width: 6),
-              Text(label,
-                  style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w600)),
             ],
           ),
         ),

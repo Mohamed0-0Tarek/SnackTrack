@@ -195,7 +195,7 @@ class _MealHistoryScreenState extends State<MealHistoryScreen> {
           Icon(
             Icons.restaurant_menu_outlined,
             size: 64,
-            color: theme.hintColor.withOpacity(0.4),
+            color: theme.hintColor.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
           Text(
@@ -219,7 +219,7 @@ class _MealHistoryScreenState extends State<MealHistoryScreen> {
           Icon(
             Icons.error_outline_rounded,
             size: 48,
-            color: theme.colorScheme.error.withOpacity(0.6),
+            color: theme.colorScheme.error.withValues(alpha: 0.6),
           ),
           const SizedBox(height: 16),
           Text(

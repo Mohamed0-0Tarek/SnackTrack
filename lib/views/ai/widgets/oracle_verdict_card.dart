@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'custom_card.dart';
 
 class OracleVerdictCard extends StatelessWidget {
-  const OracleVerdictCard();
+  const OracleVerdictCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +59,7 @@ class OracleVerdictCard extends StatelessWidget {
 class AdjustmentRow extends StatelessWidget {
   final String text;
   final Color color;
-  const AdjustmentRow({required this.text, required this.color});
+  const AdjustmentRow({super.key, required this.text, required this.color});
 
   @override
   Widget build(BuildContext context) {

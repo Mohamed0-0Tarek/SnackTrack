@@ -37,7 +37,7 @@ class KnowledgeTile extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.12),
+                    color: iconColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: iconColor, size: 22),
@@ -59,7 +59,7 @@ class KnowledgeTile extends StatelessWidget {
                         style: tt.bodySmall?.copyWith(
                           color: Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.5),
+                          ).colorScheme.onSurface.withValues(alpha: 0.5),
                           height: 1.4,
                         ),
                       ),
@@ -70,7 +70,7 @@ class KnowledgeTile extends StatelessWidget {
                   Icons.chevron_right_rounded,
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.3),
+                  ).colorScheme.onSurface.withValues(alpha: 0.3),
                   size: 20,
                 ),
               ],

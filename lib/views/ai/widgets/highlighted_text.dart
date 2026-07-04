@@ -5,7 +5,7 @@ class HighlightedText extends StatelessWidget {
   final TextStyle baseStyle;
   final TextStyle highlightStyle;
 
-  const HighlightedText({
+  const HighlightedText({super.key, 
     required this.raw,
     required this.baseStyle,
     required this.highlightStyle,

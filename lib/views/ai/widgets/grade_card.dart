@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class GradeCard extends StatelessWidget {
-  const GradeCard();
+  const GradeCard({super.key});
 
   @override
   Widget build(BuildContext context) {

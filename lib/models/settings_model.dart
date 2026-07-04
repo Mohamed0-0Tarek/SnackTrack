@@ -36,6 +36,19 @@ class SettingsModel extends HiveObject {
   @HiveField(6)
   double goalFat;
 
+  // ── Accessibility (Phase D) ────────────────────────────────────────
+  @HiveField(7)
+  double textSize; // 0=Compact, 1=Standard, 2=Enlarged
+
+  @HiveField(8)
+  bool highContrast;
+
+  @HiveField(9)
+  int voiceSensitivity; // 0=Quiet, 1=Balanced, 2=Highly Reactive
+
+  @HiveField(10)
+  bool adaptiveAssist;
+
   SettingsModel({
     this.darkMode = false,
     this.notifFrequency = 1,
@@ -44,6 +57,10 @@ class SettingsModel extends HiveObject {
     this.goalProtein = 150,
     this.goalCarbs = 250,
     this.goalFat = 65,
+    this.textSize = 1,
+    this.highContrast = false,
+    this.voiceSensitivity = 1,
+    this.adaptiveAssist = false,
   });
 
   factory SettingsModel.fromJson(Map<String, dynamic> json) => SettingsModel(
@@ -54,6 +71,10 @@ class SettingsModel extends HiveObject {
         goalProtein: (json['goalProtein'] as num?)?.toDouble() ?? 150,
         goalCarbs: (json['goalCarbs'] as num?)?.toDouble() ?? 250,
         goalFat: (json['goalFat'] as num?)?.toDouble() ?? 65,
+        textSize: (json['textSize'] as num?)?.toDouble() ?? 1,
+        highContrast: json['highContrast'] ?? false,
+        voiceSensitivity: json['voiceSensitivity'] ?? 1,
+        adaptiveAssist: json['adaptiveAssist'] ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -64,5 +85,9 @@ class SettingsModel extends HiveObject {
         'goalProtein': goalProtein,
         'goalCarbs': goalCarbs,
         'goalFat': goalFat,
+        'textSize': textSize,
+        'highContrast': highContrast,
+        'voiceSensitivity': voiceSensitivity,
+        'adaptiveAssist': adaptiveAssist,
       };
 }

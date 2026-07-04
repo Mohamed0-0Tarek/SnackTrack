@@ -117,10 +117,10 @@ class MealCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: 180,
-      color: colors.primary.withOpacity(0.08),
+      color: colors.primary.withValues(alpha: 0.08),
       child: Icon(
         Icons.restaurant_menu_rounded,
-        color: colors.primary.withOpacity(0.3),
+        color: colors.primary.withValues(alpha: 0.3),
         size: 48,
       ),
     );

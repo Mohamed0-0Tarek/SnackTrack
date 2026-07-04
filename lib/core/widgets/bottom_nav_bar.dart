@@ -69,7 +69,7 @@ class _NavBarItem extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: isActive ? primary.withOpacity(0.12) : Colors.transparent,
+                color: isActive ? primary.withValues(alpha: 0.12) : Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, size: 22, color: isActive ? primary : inactive),

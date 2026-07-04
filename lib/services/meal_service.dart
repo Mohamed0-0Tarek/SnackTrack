@@ -92,10 +92,10 @@ class MealService {
 
     final meals = snapshot.docs.map(MealModel.fromFirestore).toList();
 
-    final totalCalories = meals.fold<int>(0, (sum, meal) => sum + meal.calories);
-    final totalProtein = meals.fold<double>(0, (sum, meal) => sum + meal.protein);
-    final totalCarbs = meals.fold<double>(0, (sum, meal) => sum + meal.carbs);
-    final totalFat = meals.fold<double>(0, (sum, meal) => sum + meal.fat);
+    final totalCalories = meals.fold<int>(0, (total, meal) => total + meal.calories);
+    final totalProtein = meals.fold<double>(0, (total, meal) => total + meal.protein);
+    final totalCarbs = meals.fold<double>(0, (total, meal) => total + meal.carbs);
+    final totalFat = meals.fold<double>(0, (total, meal) => total + meal.fat);
 
     return DailySummaryModel(
       date: date,

@@ -39,6 +39,34 @@ class App extends StatefulWidget {
   State<App> createState() => _AppState();
 }
 
+/// Maps the persisted `SettingController.textSize` slider value
+/// (0 = Compact, 1 = Standard, 2 = Enlarged) to an actual text scale
+/// factor. Single source of truth — if the scale ever needs tuning,
+/// it changes here once, not in every screen that reads textSize.
+double _textScaleForSetting(double textSize) {
+  switch (textSize.round()) {
+    case 0:
+      return 0.9;
+    case 2:
+      return 1.25;
+    default:
+      return 1.0;
+  }
+}
+
+/// Applies the accessibility-driven theme transforms on top of a base
+/// light/dark [ThemeData], in one place, so `theme:`/`darkTheme:` below
+/// stay a single line each instead of duplicating this branching twice.
+ThemeData _accessibilityTheme(ThemeData base, SettingController settings) {
+  var theme = base;
+  if (settings.highContrast) theme = AppTheme.highContrast(theme);
+  if (settings.adaptiveAssist) {
+    theme = AppTheme.reducedMotion(theme);
+    theme = AppTheme.largerTapTargets(theme);
+  }
+  return theme;
+}
+
 class _AppState extends State<App> {
   late final AuthController _authController;
   late final MealService _mealService;
@@ -149,10 +177,20 @@ class _AppState extends State<App> {
         builder: (context, settings, _) => MaterialApp.router(
           debugShowCheckedModeBanner: false,
           title: 'SnackTrack',
-          theme: AppTheme.light,
-          darkTheme: AppTheme.dark,
+          theme: _accessibilityTheme(AppTheme.light, settings),
+          darkTheme: _accessibilityTheme(AppTheme.dark, settings),
           themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
           routerConfig: _router,
+          builder: (context, child) {
+            final scale = _textScaleForSetting(settings.textSize);
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(scale),
+                disableAnimations: settings.adaptiveAssist,
+              ),
+              child: child!,
+            );
+          },
         ),
       ),
     );

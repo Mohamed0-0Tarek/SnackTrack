@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'custom_card.dart';
 
 class EnergyFluxCard extends StatelessWidget {
-  const EnergyFluxCard();
+  const EnergyFluxCard({super.key});
 
   @override
   Widget build(BuildContext context) {

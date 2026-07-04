@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'custom_card.dart';
 
 class MetabolicHealthCard extends StatelessWidget {
-  const MetabolicHealthCard();
+  const MetabolicHealthCard({super.key});
 
   @override
   Widget build(BuildContext context) {

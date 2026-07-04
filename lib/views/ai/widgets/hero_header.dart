@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class HeroHeader extends StatelessWidget {
-  const HeroHeader();
+  const HeroHeader({super.key});
 
   @override
   Widget build(BuildContext context) {

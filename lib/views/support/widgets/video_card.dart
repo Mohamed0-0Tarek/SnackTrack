@@ -36,7 +36,7 @@ class VideoCard extends StatelessWidget {
                 Container(
                   height: 130,
                   decoration: BoxDecoration(
-                    color: bgColor.withOpacity(0.8),
+                    color: bgColor.withValues(alpha: 0.8),
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(14),
                     ),
@@ -44,7 +44,7 @@ class VideoCard extends StatelessWidget {
                   child: Center(
                     child: Icon(
                       Icons.play_circle_filled_rounded,
-                      color: Colors.white.withOpacity(0.4),
+                      color: Colors.white.withValues(alpha: 0.4),
                       size: 48,
                     ),
                   ),
@@ -59,7 +59,7 @@ class VideoCard extends StatelessWidget {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
+                      color: Colors.black.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(

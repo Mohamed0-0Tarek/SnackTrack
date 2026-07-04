@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants/app_routes.dart';
 import '../../controllers/auth_controller.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────

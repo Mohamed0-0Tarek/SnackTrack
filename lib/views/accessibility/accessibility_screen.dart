@@ -1,28 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:health_assistant/controllers/setting_controller.dart';
 import 'package:health_assistant/views/accessibility/widgets/reusable_card.dart';
 import 'package:health_assistant/views/accessibility/widgets/square_slider_thumb.dart';
 import 'package:health_assistant/views/accessibility/widgets/voice_sensitivity_option.dart';
 
-class AccessibilityScreen extends StatefulWidget {
+/// Accessibility preferences (text size, high contrast, voice sensitivity,
+/// adaptive assist).
+///
+/// These four fields live on [SettingController] / [SettingsModel] now,
+/// alongside dark mode and the goal fields — this screen only reads and
+/// writes through the controller, the same way `app_settings_screen.dart`
+/// does. There's no local state and no separate save path here: every
+/// change calls a `SettingController` setter, which persists to Hive and
+/// Firestore itself (see `_persist()` in setting_controller.dart).
+class AccessibilityScreen extends StatelessWidget {
   const AccessibilityScreen({super.key});
 
-  @override
-  State<AccessibilityScreen> createState() => _AccessibilityScreenState();
-}
-
-class _AccessibilityScreenState extends State<AccessibilityScreen> {
-  double _textSize       = 1; // 0=Compact, 1=Standard, 2=Enlarged
-  bool   _highContrast   = false;
-  int    _voiceSensitivity = 1; // 0=Quiet, 1=Balanced, 2=Highly Reactive
-  bool   _adaptiveAssist = false;
-
-  String get _textSizeLabel => ['COMPACT', 'STANDARD', 'ENLARGED'][_textSize.round()];
+  static const _textSizeLabels = ['COMPACT', 'STANDARD', 'ENLARGED'];
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tt     = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final settings = context.watch<SettingController>();
+    final textSizeLabel = _textSizeLabels[settings.textSize.round()];
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0F1629) : const Color(0xFFF4F4F4),
@@ -144,10 +147,9 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                             thumbColor: Colors.white,
                           ),
                           child: Slider(
-                            value: _textSize,
+                            value: settings.textSize,
                             min: 0, max: 2, divisions: 2,
-                            onChanged: (v) =>
-                                setState(() => _textSize = v),
+                            onChanged: settings.setTextSize,
                           ),
                         ),
                       ),
@@ -168,10 +170,10 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                           .map((l) => Text(
                                 l,
                                 style: tt.labelSmall?.copyWith(
-                                  color: l == _textSizeLabel
+                                  color: l == textSizeLabel
                                       ? scheme.primary
                                       : scheme.onSurface.withAlpha(90),
-                                  fontWeight: l == _textSizeLabel
+                                  fontWeight: l == textSizeLabel
                                       ? FontWeight.bold
                                       : FontWeight.w400,
                                   fontSize: 10,
@@ -223,8 +225,8 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                   ),
                   const SizedBox(width: 10),
                   Switch(
-                    value: _highContrast,
-                    onChanged: (v) => setState(() => _highContrast = v),
+                    value: settings.highContrast,
+                    onChanged: settings.setHighContrast,
                     activeThumbColor: scheme.primary,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -282,30 +284,30 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                         icon: Icons.favorite_border_rounded,
                         label: 'QUIET',
                         index: 0,
-                        selected: _voiceSensitivity,
+                        selected: settings.voiceSensitivity,
                         scheme: scheme,
                         isDark: isDark,
-                        onTap: () => setState(() => _voiceSensitivity = 0),
+                        onTap: () => settings.setVoiceSensitivity(0),
                       ),
                       const SizedBox(width: 8),
                       VoiceOption(
                         icon: Icons.balance_rounded,
                         label: 'BALANCED',
                         index: 1,
-                        selected: _voiceSensitivity,
+                        selected: settings.voiceSensitivity,
                         scheme: scheme,
                         isDark: isDark,
-                        onTap: () => setState(() => _voiceSensitivity = 1),
+                        onTap: () => settings.setVoiceSensitivity(1),
                       ),
                       const SizedBox(width: 8),
                       VoiceOption(
                         icon: Icons.bolt_rounded,
                         label: 'HIGHLY\nREACTIVE',
                         index: 2,
-                        selected: _voiceSensitivity,
+                        selected: settings.voiceSensitivity,
                         scheme: scheme,
                         isDark: isDark,
-                        onTap: () => setState(() => _voiceSensitivity = 2),
+                        onTap: () => settings.setVoiceSensitivity(2),
                       ),
                     ],
                   ),
@@ -377,12 +379,12 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                   const SizedBox(height: 18),
                   GestureDetector(
                     onTap: () =>
-                        setState(() => _adaptiveAssist = !_adaptiveAssist),
+                        settings.setAdaptiveAssist(!settings.adaptiveAssist),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 13),
                       decoration: BoxDecoration(
-                        color: _adaptiveAssist
+                        color: settings.adaptiveAssist
                             ? Colors.white
                             : Colors.white.withAlpha(50),
                         borderRadius: BorderRadius.circular(12),
@@ -393,11 +395,11 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          _adaptiveAssist
+                          settings.adaptiveAssist
                               ? 'Adaptive Mode On'
                               : 'Enable Adaptive Mode',
                           style: tt.labelLarge?.copyWith(
-                            color: _adaptiveAssist
+                            color: settings.adaptiveAssist
                                 ? const Color(0xFF6A3DE8)
                                 : Colors.white,
                             fontWeight: FontWeight.bold,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'custom_card.dart';
 
 class NutrientSaturationCard extends StatelessWidget {
-  const NutrientSaturationCard();
+  const NutrientSaturationCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +78,7 @@ class NutrientRow extends StatelessWidget {
   final String sub;
   final Widget trailing;
 
-  const NutrientRow({
+  const NutrientRow({super.key, 
     required this.icon,
     required this.iconColor,
     required this.name,
@@ -88,7 +88,6 @@ class NutrientRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return Row(

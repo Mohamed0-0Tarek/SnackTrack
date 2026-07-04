@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SystemLogsCard extends StatelessWidget {
-  const SystemLogsCard();
+  const SystemLogsCard({super.key});
 
   static const _logs = [
     LogEntry(
@@ -67,7 +67,7 @@ class LogEntry {
 
 class LogTile extends StatelessWidget {
   final LogEntry entry;
-  const LogTile({required this.entry});
+  const LogTile({super.key, required this.entry});
 
   @override
   Widget build(BuildContext context) {

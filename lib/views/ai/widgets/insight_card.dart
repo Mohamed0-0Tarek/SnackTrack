@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'highlighted_text.dart';
 
 class InsightCard extends StatelessWidget {
-  const InsightCard();
+  const InsightCard({super.key});
 
   @override
   Widget build(BuildContext context) {

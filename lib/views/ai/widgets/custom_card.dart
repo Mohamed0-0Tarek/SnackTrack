@@ -4,7 +4,7 @@ class CustomCard extends StatelessWidget {
   final Widget child;
   final Color? accentBorder;
 
-  const CustomCard({required this.child, this.accentBorder});
+  const CustomCard({super.key, required this.child, this.accentBorder});
 
   @override
   Widget build(BuildContext context) {

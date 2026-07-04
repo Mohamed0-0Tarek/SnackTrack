@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../controllers/ai_controller.dart';
 import 'widgets/hero_section.dart';
 import 'widgets/ai_message.dart';
 import 'widgets/user_message.dart';

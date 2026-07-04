@@ -23,7 +23,7 @@ class SquareThumbShape extends SliderComponentShape {
 
     // Shadow
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.15)
+      ..color = Colors.black.withValues(alpha: 0.15)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
     canvas.drawRRect(
       RRect.fromRectAndRadius(

@@ -4,7 +4,7 @@ class ReportCard extends StatelessWidget {
   final Widget child;
   final Color? borderColor;
 
-  const ReportCard({required this.child, this.borderColor});
+  const ReportCard({super.key, required this.child, this.borderColor});
 
   @override
   Widget build(BuildContext context) {

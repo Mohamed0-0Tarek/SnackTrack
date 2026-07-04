@@ -38,6 +38,11 @@ class SettingController extends ChangeNotifier {
   double _goalCarbs = 250;
   double _goalFat = 65;
 
+  double _textSize = 1; // 0=Compact, 1=Standard, 2=Enlarged
+  bool _highContrast = false;
+  int _voiceSensitivity = 1; // 0=Quiet, 1=Balanced, 2=Highly Reactive
+  bool _adaptiveAssist = false;
+
   bool isLoading = false;
   String? error;
 
@@ -48,6 +53,11 @@ class SettingController extends ChangeNotifier {
   double get goalProtein => _goalProtein;
   double get goalCarbs => _goalCarbs;
   double get goalFat => _goalFat;
+
+  double get textSize => _textSize;
+  bool get highContrast => _highContrast;
+  int get voiceSensitivity => _voiceSensitivity;
+  bool get adaptiveAssist => _adaptiveAssist;
 
   SettingController() {
     loadSettings();
@@ -104,6 +114,10 @@ class SettingController extends ChangeNotifier {
     _goalProtein = model.goalProtein;
     _goalCarbs = model.goalCarbs;
     _goalFat = model.goalFat;
+    _textSize = model.textSize;
+    _highContrast = model.highContrast;
+    _voiceSensitivity = model.voiceSensitivity;
+    _adaptiveAssist = model.adaptiveAssist;
     if (notify) notifyListeners();
   }
 
@@ -115,6 +129,10 @@ class SettingController extends ChangeNotifier {
         goalProtein: _goalProtein,
         goalCarbs: _goalCarbs,
         goalFat: _goalFat,
+        textSize: _textSize,
+        highContrast: _highContrast,
+        voiceSensitivity: _voiceSensitivity,
+        adaptiveAssist: _adaptiveAssist,
       );
 
   /// Writes the current in-memory state to both Hive and Firestore.
@@ -184,6 +202,32 @@ class SettingController extends ChangeNotifier {
 
   void setGoalFat(double value) {
     _goalFat = value;
+    notifyListeners();
+    _persist();
+  }
+
+  // ── Accessibility (Phase D) ─────────────────────────────────────────
+
+  void setTextSize(double value) {
+    _textSize = value;
+    notifyListeners();
+    _persist();
+  }
+
+  void setHighContrast(bool value) {
+    _highContrast = value;
+    notifyListeners();
+    _persist();
+  }
+
+  void setVoiceSensitivity(int value) {
+    _voiceSensitivity = value;
+    notifyListeners();
+    _persist();
+  }
+
+  void setAdaptiveAssist(bool value) {
+    _adaptiveAssist = value;
     notifyListeners();
     _persist();
   }
