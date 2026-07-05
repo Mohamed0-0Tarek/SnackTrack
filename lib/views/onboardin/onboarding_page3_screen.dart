@@ -47,8 +47,8 @@ class Page3 extends StatelessWidget {
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              primary.withValues(alpha: 0.15),
-                              secondary.withValues(alpha: 0.08),
+                              primary.withOpacity(0.15),
+                              secondary.withOpacity(0.08),
                               Colors.transparent,
                             ],
                           ),
@@ -107,7 +107,7 @@ class Page3 extends StatelessWidget {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.06),
+                              color: Colors.black.withOpacity(0.06),
                               blurRadius: 16,
                               offset: const Offset(0, 4),
                             ),
@@ -192,7 +192,7 @@ class Page3 extends StatelessWidget {
               Text(
                 'Receive real-time, personalized guidance tailored to your unique metabolic needs and goals.',
                 style: tt.bodyMedium?.copyWith(
-                  color: scheme.onSurface.withValues(alpha: 0.55),
+                  color: scheme.onSurface.withOpacity(0.55),
                   height: 1.6,
                 ),
                 textAlign: TextAlign.center,
