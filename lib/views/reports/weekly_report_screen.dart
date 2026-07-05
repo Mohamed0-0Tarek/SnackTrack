@@ -48,7 +48,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.error_outline_rounded,
-                  size: 48, color: scheme.error.withOpacity(0.6)),
+                  size: 48, color: scheme.error.withValues(alpha: 0.6)),
               const SizedBox(height: 16),
               Text(controller.error!, textAlign: TextAlign.center,
                   style: tt.bodyMedium),

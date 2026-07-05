@@ -50,7 +50,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   }
 
   Future<void> _submit() async {
-    final currentUser = StorageService.getUser() ?? context.read<ProfileController>().profile;
+    final controller = context.read<ProfileController>();
+    final currentUser = StorageService.getUser() ?? controller.profile;
+
     if (currentUser != null) {
       await StorageService.saveUser(currentUser.copyWith(
         age: _age.round(),
@@ -60,10 +62,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       ));
     }
 
-    if (mounted) {
-      context.read<ProfileController>().loadFromStorage();
-      context.go(AppRoutes.main);
-    }
+    if (!mounted) return;
+
+    await controller.loadProfile();
+    if (!mounted) return;
+    context.go(AppRoutes.main);
   }
 
   void _skip() async {

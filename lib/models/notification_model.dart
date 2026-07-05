@@ -3,12 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 /// Firestore schema: users/{uid}/notifications/{notifId}
-///   title, body, time (Timestamp), tags (List<String>), isUnread (bool),
-///   type (String, optional — defaults to 'system')
+/// title, body, time (Timestamp), tags as a list of strings, isUnread (bool),
+/// type (String, optional - defaults to 'system')
 ///
-/// `icon` / `iconBg` used to be required constructor params, which could
-/// never come from Firestore. They're now computed getters derived from
-/// `type`, so a document only needs the fields above.
+/// The icon and background values used to be required constructor params,
+/// but they now come from computed getters derived from the notification
+/// type, so a document only needs the fields above.
 class NotifItem {
   final String id;
   final String title;

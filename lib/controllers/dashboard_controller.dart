@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../models/daily_summary_model.dart';
 import '../services/meal_service.dart';
 import '../services/ai_service.dart';

@@ -10,6 +10,7 @@ import 'controllers/weekly_report_controller.dart';
 import 'services/weekly_report_service.dart';
 import 'controllers/ai_controller.dart';
 import 'controllers/profile_controller.dart';
+import 'views/settings/settings_screen.dart';
 import 'controllers/history_controller.dart';
 import 'controllers/setting_controller.dart';
 import 'services/firebase_auth_service.dart';
@@ -145,6 +146,7 @@ class _AppState extends State<App> {
         GoRoute(path: AppRoutes.mealHistory, builder: (_, __) => const MainScreen(initialIndex: 1)),
         GoRoute(path: AppRoutes.analysis, builder: (_, __) => const MealAnalysisScreen()),
         GoRoute(path: AppRoutes.weeklySummary, builder: (_, __) => const WeeklySummaryScreen()),
+        GoRoute(path: AppRoutes.settings, builder: (_, __) => const AppSettingsScreen()),
       ],
     );
   }
@@ -171,10 +173,10 @@ class _AppState extends State<App> {
       providers: [
         ChangeNotifierProvider<AuthController>.value(value: _authController),
         ChangeNotifierProvider(create: (_) => MealController(_mealService, _aiService)),
-        ChangeNotifierProvider(create: (_) => DashboardController(_mealService,_aiService)),
+        ChangeNotifierProvider(create: (_) => DashboardController(_mealService, _aiService)),
         ChangeNotifierProvider(create: (_) => AiController(_aiService)),
         ChangeNotifierProvider(create: (_) => WeeklyReportController(_weeklyReportService, _aiService)),
-        ChangeNotifierProvider(create: (_) => ProfileController()),
+        ChangeNotifierProvider(create: (_) => ProfileController(_mealService)),
         ChangeNotifierProvider(create: (_) => HistoryController(_mealService)),
         ChangeNotifierProvider<SettingController>.value(value: _settingController),
       ],
