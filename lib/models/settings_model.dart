@@ -3,16 +3,10 @@ import 'package:hive/hive.dart';
 part 'settings_model.g.dart';
 
 /// User-configurable app settings, cached locally in Hive and synced to
-/// Firestore (`users/{uid}/settings`) by SettingController.
+/// Firestore (`users/{uid}/settings/preferences`) by SettingController.
 ///
-/// typeId 1 is used here — make sure no other HiveObject in the project
-/// claims typeId 1 (UserModel's adapter, added alongside StorageService,
-/// should use a different typeId, e.g. 0).
-///
-/// NOTE: after adding this file, run:
-///   flutter packages pub run build_runner build
-/// to generate settings_model.g.dart (the HiveTypeAdapter). This file
-/// won't compile until that's been generated once.
+/// typeId 1. After adding new @HiveField entries, run:
+///   flutter packages pub run build_runner build --delete-conflicting-outputs
 @HiveType(typeId: 1)
 class SettingsModel extends HiveObject {
   @HiveField(0)
@@ -36,7 +30,7 @@ class SettingsModel extends HiveObject {
   @HiveField(6)
   double goalFat;
 
-  // ── Accessibility (Phase D) ────────────────────────────────────────
+  // ── Accessibility (Phase D) ───────────────────────────────────────────
   @HiveField(7)
   double textSize; // 0=Compact, 1=Standard, 2=Enlarged
 
@@ -48,6 +42,16 @@ class SettingsModel extends HiveObject {
 
   @HiveField(10)
   bool adaptiveAssist;
+
+  // ── Privacy (Phase E) ─────────────────────────────────────────────────
+  @HiveField(11)
+  bool anonymousAnalytics;
+
+  @HiveField(12)
+  bool geoTracking;
+
+  @HiveField(13)
+  bool aiTrainingModel;
 
   SettingsModel({
     this.darkMode = false,
@@ -61,6 +65,9 @@ class SettingsModel extends HiveObject {
     this.highContrast = false,
     this.voiceSensitivity = 1,
     this.adaptiveAssist = false,
+    this.anonymousAnalytics = true,
+    this.geoTracking = false,
+    this.aiTrainingModel = true,
   });
 
   factory SettingsModel.fromJson(Map<String, dynamic> json) => SettingsModel(
@@ -75,6 +82,9 @@ class SettingsModel extends HiveObject {
         highContrast: json['highContrast'] ?? false,
         voiceSensitivity: json['voiceSensitivity'] ?? 1,
         adaptiveAssist: json['adaptiveAssist'] ?? false,
+        anonymousAnalytics: json['anonymousAnalytics'] ?? true,
+        geoTracking: json['geoTracking'] ?? false,
+        aiTrainingModel: json['aiTrainingModel'] ?? true,
       );
 
   Map<String, dynamic> toJson() => {
@@ -89,5 +99,8 @@ class SettingsModel extends HiveObject {
         'highContrast': highContrast,
         'voiceSensitivity': voiceSensitivity,
         'adaptiveAssist': adaptiveAssist,
+        'anonymousAnalytics': anonymousAnalytics,
+        'geoTracking': geoTracking,
+        'aiTrainingModel': aiTrainingModel,
       };
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:health_assistant/views/onboardin/widgets/ring_painter.dart';
+import 'package:snacktrack/views/onboardin/widgets/ring_painter.dart';
 
 class Page2 extends StatelessWidget {
   final bool isDark;
@@ -38,7 +38,9 @@ class Page2 extends StatelessWidget {
                 height: 230,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: scheme.onSurface.withValues(alpha: 0.1)),
+                  border: Border.all(
+                    color: scheme.onSurface.withValues(alpha: 0.1),
+                  ),
                   gradient: LinearGradient(
                     colors: [
                       primary.withValues(alpha: 0.08),

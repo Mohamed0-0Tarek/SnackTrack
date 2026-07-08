@@ -1,6 +1,6 @@
 {
-    "name": "health_assistant",
-    "short_name": "health_assistant",
+    "name": "snacktrack",
+    "short_name": "snacktrack",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

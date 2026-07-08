@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:health_assistant/views/support/widgets/knowledge_title.dart';
-import 'package:health_assistant/views/support/widgets/video_card.dart';
+import 'package:snacktrack/views/support/widgets/knowledge_title.dart';
+import 'package:snacktrack/views/support/widgets/video_card.dart';
 
 class SupportScreen extends StatefulWidget {
   const SupportScreen({super.key});
@@ -12,26 +12,33 @@ class SupportScreen extends StatefulWidget {
 class _SupportScreenState extends State<SupportScreen> {
   final _searchCtrl = TextEditingController();
 
-  final List<String> _popularTags = ['Data Sync', 'Security', 'Pro Subscription'];
+  final List<String> _popularTags = [
+    'Data Sync',
+    'Security',
+    'Pro Subscription',
+  ];
 
   final List<Map<String, dynamic>> _knowledgeBase = [
     {
       'icon': Icons.rocket_launch_outlined,
       'color': Color(0xFF00B4DB),
       'title': 'Getting Started',
-      'subtitle': 'Everything you need to know to get up and running with NutriFit.',
+      'subtitle':
+          'Everything you need to know to get up and running with NutriFit.',
     },
     {
       'icon': Icons.person_outline_rounded,
       'color': Color(0xFF6A3DE8),
       'title': 'Account & Safety',
-      'subtitle': 'Manage your profile, security settings, and privacy preferences.',
+      'subtitle':
+          'Manage your profile, security settings, and privacy preferences.',
     },
     {
       'icon': Icons.receipt_long_outlined,
       'color': Color(0xFF00B4DB),
       'title': 'Billing',
-      'subtitle': 'Questions about invoices, plans, and subscription management.',
+      'subtitle':
+          'Questions about invoices, plans, and subscription management.',
     },
     {
       'icon': Icons.code_rounded,
@@ -44,19 +51,22 @@ class _SupportScreenState extends State<SupportScreen> {
   final List<Map<String, dynamic>> _videos = [
     {
       'title': 'Mastering the Meal Analysis Engine',
-      'subtitle': 'Learn how to configure advanced AI analysis for precision nutrition data.',
+      'subtitle':
+          'Learn how to configure advanced AI analysis for precision nutrition data.',
       'duration': '12:45',
       'color': Color(0xFF0A2A2A),
     },
     {
       'title': 'Visualizing Growth Trends',
-      'subtitle': 'Deep dive into our custom visualization tools and reporting features.',
+      'subtitle':
+          'Deep dive into our custom visualization tools and reporting features.',
       'duration': '08:20',
       'color': Color(0xFF0A1A2A),
     },
     {
       'title': 'Setting Up Custom Meal Plans',
-      'subtitle': 'Step-by-step guide to connecting NutriFit to your existing workflow.',
+      'subtitle':
+          'Step-by-step guide to connecting NutriFit to your existing workflow.',
       'duration': '15:10',
       'color': Color(0xFF1A1A2A),
     },
@@ -71,7 +81,7 @@ class _SupportScreenState extends State<SupportScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final tt     = Theme.of(context).textTheme;
+    final tt = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -79,7 +89,6 @@ class _SupportScreenState extends State<SupportScreen> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-
             // ── AppBar ─────────────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -89,17 +98,26 @@ class _SupportScreenState extends State<SupportScreen> {
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
-                      width: 36, height: 36,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1A2236) : Colors.black87,
+                        color: isDark
+                            ? const Color(0xFF1A2236)
+                            : Colors.black87,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white, size: 16),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
                     ),
                   ),
-                  Icon(Icons.notifications_outlined,
-                      color: scheme.onSurface, size: 26),
+                  Icon(
+                    Icons.notifications_outlined,
+                    color: scheme.onSurface,
+                    size: 26,
+                  ),
                 ],
               ),
             ),
@@ -130,14 +148,21 @@ class _SupportScreenState extends State<SupportScreen> {
                   const SizedBox(height: 16),
                   // Search bar
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withAlpha(70),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.search_rounded, color: Colors.white70, size: 18),
+                        const Icon(
+                          Icons.search_rounded,
+                          color: Colors.white70,
+                          size: 18,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: TextField(
@@ -145,7 +170,10 @@ class _SupportScreenState extends State<SupportScreen> {
                             style: const TextStyle(color: Colors.white),
                             decoration: const InputDecoration(
                               hintText: 'Search for documentation...',
-                              hintStyle: TextStyle(color: Colors.white54, fontSize: 13),
+                              hintStyle: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 13,
+                              ),
                               isDense: true,
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.zero,
@@ -168,23 +196,30 @@ class _SupportScreenState extends State<SupportScreen> {
                         child: Wrap(
                           spacing: 6,
                           runSpacing: 6,
-                          children: _popularTags.map((tag) => GestureDetector(
-                            onTap: () => _searchCtrl.text = tag,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withAlpha(70),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                tag,
-                                style: tt.labelSmall?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500),
-                              ),
-                            ),
-                          )).toList(),
+                          children: _popularTags
+                              .map(
+                                (tag) => GestureDetector(
+                                  onTap: () => _searchCtrl.text = tag,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withAlpha(70),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      tag,
+                                      style: tt.labelSmall?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
                         ),
                       ),
                     ],
@@ -201,19 +236,27 @@ class _SupportScreenState extends State<SupportScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Knowledge Base',
-                      style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(
+                    'Knowledge Base',
+                    style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                  ),
                   GestureDetector(
                     onTap: () {},
                     child: Row(
                       children: [
-                        Text('View All',
-                            style: tt.labelMedium?.copyWith(
-                                color: scheme.primary,
-                                fontWeight: FontWeight.w600)),
+                        Text(
+                          'View All',
+                          style: tt.labelMedium?.copyWith(
+                            color: scheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         const SizedBox(width: 4),
-                        Icon(Icons.arrow_forward_rounded,
-                            size: 16, color: scheme.primary),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 16,
+                          color: scheme.primary,
+                        ),
                       ],
                     ),
                   ),
@@ -226,21 +269,24 @@ class _SupportScreenState extends State<SupportScreen> {
               child: Text(
                 'Explore categories to find detailed documentation',
                 style: tt.bodySmall?.copyWith(
-                    color: scheme.onSurface.withAlpha(120)),
+                  color: scheme.onSurface.withAlpha(120),
+                ),
               ),
             ),
 
             const SizedBox(height: 16),
 
             // Knowledge items
-            ..._knowledgeBase.map((item) => KnowledgeTile(
-                  icon: item['icon'] as IconData,
-                  iconColor: item['color'] as Color,
-                  title: item['title'] as String,
-                  subtitle: item['subtitle'] as String,
-                  isDark: isDark,
-                  onTap: () {},
-                )),
+            ..._knowledgeBase.map(
+              (item) => KnowledgeTile(
+                icon: item['icon'] as IconData,
+                iconColor: item['color'] as Color,
+                title: item['title'] as String,
+                subtitle: item['subtitle'] as String,
+                isDark: isDark,
+                onTap: () {},
+              ),
+            ),
 
             const SizedBox(height: 28),
 
@@ -257,8 +303,11 @@ class _SupportScreenState extends State<SupportScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.play_circle_outline_rounded,
-                          color: Color(0xFF00B4DB), size: 16),
+                      const Icon(
+                        Icons.play_circle_outline_rounded,
+                        color: Color(0xFF00B4DB),
+                        size: 16,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         'VIDEO SERIES',
@@ -284,7 +333,9 @@ class _SupportScreenState extends State<SupportScreen> {
                     onTap: () {},
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withAlpha(30),
                         borderRadius: BorderRadius.circular(20),
@@ -292,14 +343,18 @@ class _SupportScreenState extends State<SupportScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.play_arrow_rounded,
-                              color: Colors.white, size: 16),
+                          const Icon(
+                            Icons.play_arrow_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             'Watch All Tutorials',
                             style: tt.labelMedium?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500),
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
                       ),
@@ -307,13 +362,15 @@ class _SupportScreenState extends State<SupportScreen> {
                   ),
                   const SizedBox(height: 20),
                   // Video cards
-                  ..._videos.map((v) => VideoCard(
-                        title: v['title'] as String,
-                        subtitle: v['subtitle'] as String,
-                        duration: v['duration'] as String,
-                        bgColor: v['color'] as Color,
-                        onTap: () {},
-                      )),
+                  ..._videos.map(
+                    (v) => VideoCard(
+                      title: v['title'] as String,
+                      subtitle: v['subtitle'] as String,
+                      duration: v['duration'] as String,
+                      bgColor: v['color'] as Color,
+                      onTap: () {},
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -331,13 +388,15 @@ class _SupportScreenState extends State<SupportScreen> {
                   color: scheme.onSurface.withAlpha(50),
                   width: 1,
                 ),
-                boxShadow: isDark ? null : [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(100),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                boxShadow: isDark
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(100),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,8 +409,9 @@ class _SupportScreenState extends State<SupportScreen> {
                   Text(
                     'Our expert support team is available 24/7 to help you with any technical challenges or account questions.',
                     style: tt.bodySmall?.copyWith(
-                        color: scheme.onSurface.withAlpha(120),
-                        height: 1.5),
+                      color: scheme.onSurface.withAlpha(120),
+                      height: 1.5,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   // Submit ticket button
@@ -363,12 +423,17 @@ class _SupportScreenState extends State<SupportScreen> {
                       borderRadius: BorderRadius.circular(12),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            vertical: 14, horizontal: 16),
+                          vertical: 14,
+                          horizontal: 16,
+                        ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.confirmation_number_outlined,
-                                color: Colors.black, size: 20),
+                            const Icon(
+                              Icons.confirmation_number_outlined,
+                              color: Colors.black,
+                              size: 20,
+                            ),
                             const SizedBox(width: 10),
                             Text(
                               'Submit Support Ticket',
@@ -423,9 +488,7 @@ class _SupportScreenState extends State<SupportScreen> {
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1A2236) : Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: scheme.onSurface.withAlpha(50),
-                ),
+                border: Border.all(color: scheme.onSurface.withAlpha(50)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -441,8 +504,9 @@ class _SupportScreenState extends State<SupportScreen> {
                   Text(
                     'Connect with other SnackTrack users, share tips, and get inspired by successful workflows.',
                     style: tt.bodySmall?.copyWith(
-                        color: scheme.onSurface.withAlpha(120),
-                        height: 1.5),
+                      color: scheme.onSurface.withAlpha(120),
+                      height: 1.5,
+                    ),
                   ),
                   const SizedBox(height: 14),
                   GestureDetector(
@@ -457,8 +521,11 @@ class _SupportScreenState extends State<SupportScreen> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Icon(Icons.open_in_new_rounded,
-                            size: 14, color: scheme.primary),
+                        Icon(
+                          Icons.open_in_new_rounded,
+                          size: 14,
+                          color: scheme.primary,
+                        ),
                       ],
                     ),
                   ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:health_assistant/core/constants/app_routes.dart';
+import 'package:snacktrack/core/constants/app_routes.dart';
 
 class AiCoachFab extends StatelessWidget {
   const AiCoachFab({super.key});

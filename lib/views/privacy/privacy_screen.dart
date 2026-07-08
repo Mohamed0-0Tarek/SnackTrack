@@ -1,30 +1,25 @@
+
+
 import 'package:flutter/material.dart';
-import 'package:health_assistant/core/widgets/divider.dart';
-import 'package:health_assistant/views/privacy/widgets/badge.dart';
-import 'package:health_assistant/views/privacy/widgets/certification_badge.dart';
-import 'package:health_assistant/views/privacy/widgets/control_card.dart';
-import 'package:health_assistant/views/privacy/widgets/export_button.dart';
-import 'package:health_assistant/views/privacy/widgets/toggle_title.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
+import '../../controllers/setting_controller.dart';
+import '../../core/widgets/divider.dart';
+import 'widgets/badge.dart';
+import 'widgets/certification_badge.dart';
+import 'widgets/control_card.dart';
+import 'widgets/export_button.dart';
+import 'widgets/toggle_title.dart';
 
-class DataPrivacyScreen extends StatefulWidget {
+class DataPrivacyScreen extends StatelessWidget {
   const DataPrivacyScreen({super.key});
-
-  @override
-  State<DataPrivacyScreen> createState() => _DataPrivacyScreenState();
-}
-
-class _DataPrivacyScreenState extends State<DataPrivacyScreen> {
-  bool _anonymousAnalytics = true;
-  bool _geoTracking        = false;
-  bool _aiTrainingModel    = true;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tt     = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final settings = context.watch<SettingController>();
 
     return Scaffold(
       body: SafeArea(
@@ -136,9 +131,9 @@ class _DataPrivacyScreenState extends State<DataPrivacyScreen> {
                     title: 'Anonymous Analytics',
                     subtitle:
                         'Help improve NutriFit with anonymized usage data.',
-                    value: _anonymousAnalytics,
+                    value: settings.anonymousAnalytics,
                     onChanged: (v) =>
-                        setState(() => _anonymousAnalytics = v),
+                        context.read<SettingController>().setAnonymousAnalytics(v),
                     isDark: isDark,
                   ),
                   AppDivider(isDark: isDark),
@@ -148,9 +143,9 @@ class _DataPrivacyScreenState extends State<DataPrivacyScreen> {
                     title: 'Precision Geo-Tracking',
                     subtitle:
                         'Use high-accuracy GPS for workout mapping.',
-                    value: _geoTracking,
+                    value: settings.geoTracking,
                     onChanged: (v) =>
-                        setState(() => _geoTracking = v),
+                        context.read<SettingController>().setGeoTracking(v),
                     isDark: isDark,
                   ),
                   AppDivider(isDark: isDark),
@@ -160,9 +155,9 @@ class _DataPrivacyScreenState extends State<DataPrivacyScreen> {
                     title: 'AI Training Model',
                     subtitle:
                         'Allow AI to learn from your specific nutritional patterns.',
-                    value: _aiTrainingModel,
+                    value: settings.aiTrainingModel,
                     onChanged: (v) =>
-                        setState(() => _aiTrainingModel = v),
+                        context.read<SettingController>().setAiTrainingModel(v),
                     isDark: isDark,
                   ),
                 ],
@@ -360,3 +355,5 @@ class _DataPrivacyScreenState extends State<DataPrivacyScreen> {
     );
   }
 }
+
+

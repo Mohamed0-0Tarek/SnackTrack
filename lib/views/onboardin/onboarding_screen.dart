@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:health_assistant/views/onboardin/onboarding_page1_screen.dart';
-import 'package:health_assistant/views/onboardin/onboarding_page2_screen.dart';
-import 'package:health_assistant/views/onboardin/onboarding_page3_screen.dart';
+import 'package:snacktrack/views/onboardin/onboarding_page1_screen.dart';
+import 'package:snacktrack/views/onboardin/onboarding_page2_screen.dart';
+import 'package:snacktrack/views/onboardin/onboarding_page3_screen.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 
@@ -20,8 +20,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   // Slide-in animation for content
   late final AnimationController _slideCtrl;
-  late final Animation<Offset>    _slideAnim;
-  late final Animation<double>    _fadeAnim;
+  late final Animation<Offset> _slideAnim;
+  late final Animation<double> _fadeAnim;
 
   @override
   void initState() {
@@ -33,7 +33,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
     _slideAnim = Tween<Offset>(
       begin: const Offset(0, 0.08),
-      end:   Offset.zero,
+      end: Offset.zero,
     ).animate(CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOut));
 
     _fadeAnim = CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOut);
@@ -77,19 +77,22 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark  = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? CyberCortexColors.primary   : LuminaColors.primary;
-    final second  = isDark ? CyberCortexColors.secondary : LuminaColors.secondary;
-    final bgColor = isDark ? CyberCortexColors.background: const Color(0xFFEFF2F7);
-    final tt      = Theme.of(context).textTheme;
-    final scheme  = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = isDark ? CyberCortexColors.primary : LuminaColors.primary;
+    final second = isDark
+        ? CyberCortexColors.secondary
+        : LuminaColors.secondary;
+    final bgColor = isDark
+        ? CyberCortexColors.background
+        : const Color(0xFFEFF2F7);
+    final tt = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
         child: Column(
           children: [
-
             // ── Top bar ──────────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -102,8 +105,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     child: _currentPage > 0
                         ? GestureDetector(
                             onTap: _back,
-                            child: Icon(Icons.arrow_back_rounded,
-                                color: scheme.onSurface, size: 22),
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              color: scheme.onSurface,
+                              size: 22,
+                            ),
                           )
                         : null,
                   ),
@@ -146,7 +152,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: 64, height: 4,
+                    width: 64,
+                    height: 4,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(2),
                       gradient: isActive
@@ -168,18 +175,24 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 onPageChanged: _onPageChanged,
                 children: [
                   Page1(
-                    isDark: isDark, primary: primary,
-                    secondary: second, slideAnim: _slideAnim,
+                    isDark: isDark,
+                    primary: primary,
+                    secondary: second,
+                    slideAnim: _slideAnim,
                     fadeAnim: _fadeAnim,
                   ),
                   Page2(
-                    isDark: isDark, primary: primary,
-                    secondary: second, slideAnim: _slideAnim,
+                    isDark: isDark,
+                    primary: primary,
+                    secondary: second,
+                    slideAnim: _slideAnim,
                     fadeAnim: _fadeAnim,
                   ),
                   Page3(
-                    isDark: isDark, primary: primary,
-                    secondary: second, slideAnim: _slideAnim,
+                    isDark: isDark,
+                    primary: primary,
+                    secondary: second,
+                    slideAnim: _slideAnim,
                     fadeAnim: _fadeAnim,
                   ),
                 ],
@@ -199,7 +212,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     gradient: LinearGradient(
                       colors: [primary, second],
                       begin: Alignment.centerLeft,
-                      end:   Alignment.centerRight,
+                      end: Alignment.centerRight,
                     ),
                   ),
                   child: Row(
@@ -214,8 +227,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward_rounded,
-                          color: Colors.white, size: 20),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ],
                   ),
                 ),

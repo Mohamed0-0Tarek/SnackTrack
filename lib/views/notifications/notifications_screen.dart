@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:health_assistant/core/widgets/divider.dart';
-import 'package:health_assistant/models/notification_model.dart';
-import 'package:health_assistant/services/notification_service.dart';
-import 'package:health_assistant/views/notifications/widgets/notification_card.dart';
-import 'package:health_assistant/views/notifications/widgets/notification_tile.dart';
-import 'package:health_assistant/views/notifications/widgets/section_label.dart';
+import 'package:snacktrack/core/widgets/divider.dart';
+import 'package:snacktrack/models/notification_model.dart';
+import 'package:snacktrack/services/notification_service.dart';
+import 'package:snacktrack/views/notifications/widgets/notification_card.dart';
+import 'package:snacktrack/views/notifications/widgets/notification_tile.dart';
+import 'package:snacktrack/views/notifications/widgets/section_label.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -26,8 +26,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F1629) : const Color(0xFFF4F4F4),
+      backgroundColor: isDark
+          ? const Color(0xFF0F1629)
+          : const Color(0xFFF4F4F4),
       body: SafeArea(
         child: StreamBuilder<List<NotifItem>>(
           stream: _notificationService.watchNotifications(),
@@ -65,22 +66,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
                       child: Container(
-                        width: 36, height: 36,
+                        width: 36,
+                        height: 36,
                         decoration: BoxDecoration(
                           color: isDark
                               ? const Color(0xFF1A2236)
                               : Colors.black87,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.arrow_back_ios_new_rounded,
-                            color: Colors.white, size: 16),
+                        child: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                       ),
                     ),
                     TextButton(
                       onPressed: all.any((n) => n.isUnread)
                           ? () => _notificationService.markAllAsRead(
-                                all.where((n) => n.isUnread).map((n) => n.id).toList(),
-                              )
+                              all
+                                  .where((n) => n.isUnread)
+                                  .map((n) => n.id)
+                                  .toList(),
+                            )
                           : null,
                       child: Text(
                         'Mark all read',
@@ -98,7 +106,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 // ── Title ──────────────────────────────────────────────
                 Text(
                   'Activity Feed',
-                  style: tt.displayMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: tt.displayMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -141,7 +151,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               isDark: isDark,
                               scheme: scheme,
                               tt: tt,
-                              onTap: () => _notificationService.markAsRead(item.id),
+                              onTap: () =>
+                                  _notificationService.markAsRead(item.id),
                             ),
                             if (i < todayNotifs.length - 1)
                               AppDivider(isDark: isDark),
@@ -170,7 +181,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               isDark: isDark,
                               scheme: scheme,
                               tt: tt,
-                              onTap: () => _notificationService.markAsRead(item.id),
+                              onTap: () =>
+                                  _notificationService.markAsRead(item.id),
                             ),
                             if (i < previousNotifs.length - 1)
                               AppDivider(isDark: isDark),

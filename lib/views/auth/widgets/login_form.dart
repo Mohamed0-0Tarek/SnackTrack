@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:health_assistant/controllers/auth_controller.dart';
-import 'package:health_assistant/core/constants/app_colors.dart';
-import 'package:health_assistant/core/constants/app_routes.dart';
-import 'package:health_assistant/core/widgets/custom_text_field.dart';
-import 'package:health_assistant/views/auth/widgets/error_banner.dart';
-import 'package:health_assistant/views/auth/widgets/gradient_button.dart';
-import 'package:health_assistant/views/auth/widgets/or_divider.dart';
-import 'package:health_assistant/views/auth/widgets/social_button.dart';
+import 'package:snacktrack/controllers/auth_controller.dart';
+import 'package:snacktrack/core/constants/app_colors.dart';
+import 'package:snacktrack/core/constants/app_routes.dart';
+import 'package:snacktrack/core/widgets/custom_text_field.dart';
+import 'package:snacktrack/views/auth/widgets/error_banner.dart';
+import 'package:snacktrack/views/auth/widgets/gradient_button.dart';
+import 'package:snacktrack/views/auth/widgets/or_divider.dart';
+import 'package:snacktrack/views/auth/widgets/social_button.dart';
 import 'package:provider/provider.dart';
 
 class LoginForm extends StatefulWidget {
@@ -50,7 +50,9 @@ class LoginFormState extends State<LoginForm> {
     final controller = context.watch<AuthController>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = isDark ? CyberCortexColors.primary : LuminaColors.primary;
-    final second = isDark ? CyberCortexColors.secondary : LuminaColors.secondary;
+    final second = isDark
+        ? CyberCortexColors.secondary
+        : LuminaColors.secondary;
     final tt = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
 

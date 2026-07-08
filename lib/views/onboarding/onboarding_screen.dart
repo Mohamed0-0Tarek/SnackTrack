@@ -1,4 +1,7 @@
+
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 
@@ -62,6 +65,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       height: _height,
       objective: objectiveStr,
     );
+
+    // GoRouter's redirect callback checks for objective != null and
+    // redirects to /main automatically — but only on the NEXT navigation
+    // event. Explicitly pushing /main here ensures the user lands there
+    // immediately without needing any extra tap.
+    if (mounted) context.go('/main');
 
 
   } catch (e) {

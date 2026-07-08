@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:health_assistant/views/ai/weekly_summary_screen.dart';
+import 'package:snacktrack/views/ai/weekly_summary_screen.dart';
 
 class ViewSummaryButton extends StatelessWidget {
   const ViewSummaryButton({super.key});
@@ -16,9 +16,7 @@ class ViewSummaryButton extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const WeeklySummaryScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const WeeklySummaryScreen()),
           );
         },
         borderRadius: BorderRadius.circular(12),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:health_assistant/views/profile_setup/widgets/data_slider.dart';
+import 'package:snacktrack/views/profile_setup/widgets/data_slider.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
@@ -15,25 +15,27 @@ class ProfileSetupScreen extends StatefulWidget {
 }
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
-  int    _selectedGoal = 0; // 0=Weight loss, 1=Muscle gain, 2=Maintenance
-  double _age          = 28;
-  double _weight       = 74.5;
-  double _height       = 182;
+  int _selectedGoal = 0; // 0=Weight loss, 1=Muscle gain, 2=Maintenance
+  double _age = 28;
+  double _weight = 74.5;
+  double _height = 182;
 
   final List<Map<String, dynamic>> _goals = [
     {
-      'icon':     Icons.trending_down_rounded,
-      'title':    'Weight loss',
-      'subtitle': 'Aggressive fat oxidation with muscle preservation protocols.',
+      'icon': Icons.trending_down_rounded,
+      'title': 'Weight loss',
+      'subtitle':
+          'Aggressive fat oxidation with muscle preservation protocols.',
     },
     {
-      'icon':     Icons.fitness_center_rounded,
-      'title':    'Muscle gain',
-      'subtitle': 'Hypertrophy-focused nutrient partitioning and surplus tracking.',
+      'icon': Icons.fitness_center_rounded,
+      'title': 'Muscle gain',
+      'subtitle':
+          'Hypertrophy-focused nutrient partitioning and surplus tracking.',
     },
     {
-      'icon':     Icons.balance_rounded,
-      'title':    'Maintenance',
+      'icon': Icons.balance_rounded,
+      'title': 'Maintenance',
       'subtitle': 'Sustainable metabolic equilibrium for long-term health.',
     },
   ];
@@ -54,12 +56,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     final currentUser = StorageService.getUser() ?? controller.profile;
 
     if (currentUser != null) {
-      await StorageService.saveUser(currentUser.copyWith(
-        age: _age.round(),
-        weight: _weight,
-        height: _height.round().toDouble(),
-        objective: _goals[_selectedGoal]['title'] as String,
-      ));
+      await StorageService.saveUser(
+        currentUser.copyWith(
+          age: _age.round(),
+          weight: _weight,
+          height: _height.round().toDouble(),
+          objective: _goals[_selectedGoal]['title'] as String,
+        ),
+      );
     }
 
     if (!mounted) return;
@@ -75,19 +79,22 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark  = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? CyberCortexColors.primary   : LuminaColors.primary;
-    final second  = isDark ? CyberCortexColors.secondary : LuminaColors.secondary;
-    final bgColor = isDark ? CyberCortexColors.background: const Color(0xFFEFF2F7);
-    final tt      = Theme.of(context).textTheme;
-    final scheme  = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = isDark ? CyberCortexColors.primary : LuminaColors.primary;
+    final second = isDark
+        ? CyberCortexColors.secondary
+        : LuminaColors.secondary;
+    final bgColor = isDark
+        ? CyberCortexColors.background
+        : const Color(0xFFEFF2F7);
+    final tt = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
         child: Column(
           children: [
-
             // ── Top bar ──────────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -111,9 +118,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                             foreground: Paint()
                               ..shader = LinearGradient(
                                 colors: [primary, second],
-                              ).createShader(
-                                const Rect.fromLTWH(0, 0, 80, 20),
-                              ),
+                              ).createShader(const Rect.fromLTWH(0, 0, 80, 20)),
                           ),
                         ),
                       ],
@@ -134,21 +139,24 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
-                children: List.generate(4, (i) => Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 4),
-                    height: 3,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2),
-                      gradient: i < 2
-                          ? LinearGradient(colors: [primary, second])
-                          : null,
-                      color: i >= 2
-                          ? scheme.onSurface.withValues(alpha: 0.15)
-                          : null,
+                children: List.generate(
+                  4,
+                  (i) => Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 4),
+                      height: 3,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2),
+                        gradient: i < 2
+                            ? LinearGradient(colors: [primary, second])
+                            : null,
+                        color: i >= 2
+                            ? scheme.onSurface.withValues(alpha: 0.15)
+                            : null,
+                      ),
                     ),
                   ),
-                )),
+                ),
               ),
             ),
 
@@ -156,9 +164,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 24),
+                  horizontal: 20,
+                  vertical: 24,
+                ),
                 children: [
-
                   // ── Heading ────────────────────────────────────────────────
                   Text(
                     'Define Your',
@@ -173,9 +182,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       foreground: Paint()
                         ..shader = LinearGradient(
                           colors: [primary, second],
-                        ).createShader(
-                          const Rect.fromLTWH(0, 0, 220, 60),
-                        ),
+                        ).createShader(const Rect.fromLTWH(0, 0, 220, 60)),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -200,8 +207,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   const SizedBox(height: 14),
 
                   ..._goals.asMap().entries.map((e) {
-                    final i      = e.key;
-                    final goal   = e.value;
+                    final i = e.key;
+                    final goal = e.value;
                     final active = _selectedGoal == i;
                     return GestureDetector(
                       onTap: () => setState(() => _selectedGoal = i),
@@ -234,7 +241,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           children: [
                             // Icon
                             Container(
-                              width: 40, height: 40,
+                              width: 40,
+                              height: 40,
                               decoration: BoxDecoration(
                                 color: active
                                     ? primary.withValues(alpha: 0.15)
@@ -261,14 +269,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                                       fontWeight: FontWeight.bold,
                                       color: active
                                           ? scheme.onSurface
-                                          : scheme.onSurface.withValues(alpha: 0.7),
+                                          : scheme.onSurface.withValues(
+                                              alpha: 0.7,
+                                            ),
                                     ),
                                   ),
                                   const SizedBox(height: 3),
                                   Text(
                                     goal['subtitle'] as String,
                                     style: tt.bodySmall?.copyWith(
-                                      color: scheme.onSurface.withValues(alpha: 0.45),
+                                      color: scheme.onSurface.withValues(
+                                        alpha: 0.45,
+                                      ),
                                       height: 1.4,
                                     ),
                                   ),
@@ -278,22 +290,26 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                             // Radio
                             AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
-                              width: 20, height: 20,
+                              width: 20,
+                              height: 20,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: active
                                       ? primary
-                                      : scheme.onSurface.withValues(alpha: 0.25),
+                                      : scheme.onSurface.withValues(
+                                          alpha: 0.25,
+                                        ),
                                   width: 2,
                                 ),
-                                color: active
-                                    ? primary
-                                    : Colors.transparent,
+                                color: active ? primary : Colors.transparent,
                               ),
                               child: active
-                                  ? const Icon(Icons.check,
-                                      color: Colors.white, size: 12)
+                                  ? const Icon(
+                                      Icons.check,
+                                      color: Colors.white,
+                                      size: 12,
+                                    )
                                   : null,
                             ),
                           ],
@@ -316,14 +332,15 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
                   // Age slider
                   DataSlider(
-                    label:    'AGE',
-                    value:    _age,
-                    min:      10, max: 80,
-                    unit:     'YRS',
-                    primary:  primary,
-                    scheme:   scheme,
-                    tt:       tt,
-                    isDark:   isDark,
+                    label: 'AGE',
+                    value: _age,
+                    min: 10,
+                    max: 80,
+                    unit: 'YRS',
+                    primary: primary,
+                    scheme: scheme,
+                    tt: tt,
+                    isDark: isDark,
                     onChanged: (v) => setState(() => _age = v),
                     displayValue: _age.round().toString(),
                   ),
@@ -331,30 +348,33 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
                   // Weight slider
                   DataSlider(
-                    label:    'CURRENT WEIGHT',
-                    value:    _weight,
-                    min:      30, max: 200,
-                    unit:     'KG',
-                    primary:  primary,
-                    scheme:   scheme,
-                    tt:       tt,
-                    isDark:   isDark,
-                    onChanged: (v) =>
-                        setState(() => _weight = double.parse(v.toStringAsFixed(1))),
+                    label: 'CURRENT WEIGHT',
+                    value: _weight,
+                    min: 30,
+                    max: 200,
+                    unit: 'KG',
+                    primary: primary,
+                    scheme: scheme,
+                    tt: tt,
+                    isDark: isDark,
+                    onChanged: (v) => setState(
+                      () => _weight = double.parse(v.toStringAsFixed(1)),
+                    ),
                     displayValue: _weight.toStringAsFixed(1),
                   ),
                   const SizedBox(height: 20),
 
                   // Height slider
                   DataSlider(
-                    label:    'HEIGHT',
-                    value:    _height,
-                    min:      120, max: 230,
-                    unit:     'CM',
-                    primary:  primary,
-                    scheme:   scheme,
-                    tt:       tt,
-                    isDark:   isDark,
+                    label: 'HEIGHT',
+                    value: _height,
+                    min: 120,
+                    max: 230,
+                    unit: 'CM',
+                    primary: primary,
+                    scheme: scheme,
+                    tt: tt,
+                    isDark: isDark,
                     onChanged: (v) => setState(() => _height = v),
                     displayValue: _height.round().toString(),
                   ),
@@ -366,24 +386,25 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     duration: const Duration(milliseconds: 300),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF1A2236)
-                          : Colors.white,
+                      color: isDark ? const Color(0xFF1A2236) : Colors.white,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                          color: primary.withValues(alpha: 0.2)),
+                      border: Border.all(color: primary.withValues(alpha: 0.2)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          width: 30, height: 30,
+                          width: 30,
+                          height: 30,
                           decoration: BoxDecoration(
                             color: primary.withValues(alpha: 0.12),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.psychology_outlined,
-                              color: primary, size: 16),
+                          child: Icon(
+                            Icons.psychology_outlined,
+                            color: primary,
+                            size: 16,
+                          ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -403,7 +424,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                                 ),
                                 TextSpan(
                                   text: _aiInsight.replaceFirst(
-                                      'AI INSIGHT: ', ''),
+                                    'AI INSIGHT: ',
+                                    '',
+                                  ),
                                 ),
                               ],
                             ),
@@ -425,8 +448,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         borderRadius: BorderRadius.circular(16),
                         gradient: LinearGradient(
                           colors: [primary, second],
-                          begin:  Alignment.centerLeft,
-                          end:    Alignment.centerRight,
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
                         ),
                       ),
                       child: Row(
@@ -435,14 +458,17 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           Text(
                             'Synchronize Profile',
                             style: tt.labelLarge?.copyWith(
-                              color:      Colors.white,
+                              color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize:   16,
+                              fontSize: 16,
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward_rounded,
-                              color: Colors.white, size: 20),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ],
                       ),
                     ),

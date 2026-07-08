@@ -1,3 +1,5 @@
+
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -43,6 +45,11 @@ class SettingController extends ChangeNotifier {
   int _voiceSensitivity = 1; // 0=Quiet, 1=Balanced, 2=Highly Reactive
   bool _adaptiveAssist = false;
 
+  // ── Privacy fields ───────────────────────────────────────────────────
+  bool _anonymousAnalytics = true;
+  bool _geoTracking = false;
+  bool _aiTrainingModel = true;
+
   bool isLoading = false;
   String? error;
 
@@ -58,6 +65,9 @@ class SettingController extends ChangeNotifier {
   bool get highContrast => _highContrast;
   int get voiceSensitivity => _voiceSensitivity;
   bool get adaptiveAssist => _adaptiveAssist;
+  bool get anonymousAnalytics => _anonymousAnalytics;
+  bool get geoTracking => _geoTracking;
+  bool get aiTrainingModel => _aiTrainingModel;
 
   SettingController() {
     loadSettings();
@@ -118,6 +128,9 @@ class SettingController extends ChangeNotifier {
     _highContrast = model.highContrast;
     _voiceSensitivity = model.voiceSensitivity;
     _adaptiveAssist = model.adaptiveAssist;
+    _anonymousAnalytics = model.anonymousAnalytics;
+    _geoTracking = model.geoTracking;
+    _aiTrainingModel = model.aiTrainingModel;
     if (notify) notifyListeners();
   }
 
@@ -133,6 +146,9 @@ class SettingController extends ChangeNotifier {
         highContrast: _highContrast,
         voiceSensitivity: _voiceSensitivity,
         adaptiveAssist: _adaptiveAssist,
+        anonymousAnalytics: _anonymousAnalytics,
+        geoTracking: _geoTracking,
+        aiTrainingModel: _aiTrainingModel,
       );
 
   /// Writes the current in-memory state to both Hive and Firestore.
@@ -228,6 +244,26 @@ class SettingController extends ChangeNotifier {
 
   void setAdaptiveAssist(bool value) {
     _adaptiveAssist = value;
+    notifyListeners();
+    _persist();
+  }
+
+  // ── Privacy setters ─────────────────────────────────────────────────
+
+  void setAnonymousAnalytics(bool value) {
+    _anonymousAnalytics = value;
+    notifyListeners();
+    _persist();
+  }
+
+  void setGeoTracking(bool value) {
+    _geoTracking = value;
+    notifyListeners();
+    _persist();
+  }
+
+  void setAiTrainingModel(bool value) {
+    _aiTrainingModel = value;
     notifyListeners();
     _persist();
   }

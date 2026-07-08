@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:health_assistant/core/widgets/ai_coach_fab.dart';
-import 'package:health_assistant/models/notification_model.dart';
-import 'package:health_assistant/services/notification_service.dart';
-import 'package:health_assistant/views/notifications/notifications_screen.dart';
+import 'package:snacktrack/core/widgets/ai_coach_fab.dart';
+import 'package:snacktrack/models/notification_model.dart';
+import 'package:snacktrack/services/notification_service.dart';
+import 'package:snacktrack/views/notifications/notifications_screen.dart';
 import 'core/widgets/bottom_nav_bar.dart';
 import 'views/dashboard/dashboard_screen.dart';
 import 'views/history/meal_history_screen.dart';
@@ -85,8 +85,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           StreamBuilder<List<NotifItem>>(
             stream: _notificationService.watchNotifications(),
             builder: (context, snapshot) {
-              final unreadCount =
-                  (snapshot.data ?? const <NotifItem>[]).where((n) => n.isUnread).length;
+              final unreadCount = (snapshot.data ?? const <NotifItem>[])
+                  .where((n) => n.isUnread)
+                  .length;
 
               return Stack(
                 clipBehavior: Clip.none,
@@ -98,7 +99,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                     ),
                     onPressed: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const NotificationsScreen(),
+                      ),
                     ),
                   ),
                   if (unreadCount > 0)
@@ -107,14 +110,21 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       top: 6,
                       child: Container(
                         padding: const EdgeInsets.all(2),
-                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
                         decoration: const BoxDecoration(
                           color: Colors.red,
                           shape: BoxShape.circle,
                         ),
                         child: Text(
                           unreadCount > 9 ? '9+' : '$unreadCount',
-                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ),

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:health_assistant/core/widgets/custom_button.dart';
-import 'package:health_assistant/views/settings/widgets/account_title.dart';
-import 'package:health_assistant/core/widgets/divider.dart';
-import 'package:health_assistant/views/settings/widgets/section_card_wrapper.dart';
-import 'package:health_assistant/views/settings/widgets/section_header.dart';
-import 'package:health_assistant/views/settings/widgets/theme_toggle_button.dart';
+import 'package:snacktrack/core/widgets/custom_button.dart';
+import 'package:snacktrack/views/settings/widgets/account_title.dart';
+import 'package:snacktrack/core/widgets/divider.dart';
+import 'package:snacktrack/views/settings/widgets/section_card_wrapper.dart';
+import 'package:snacktrack/views/settings/widgets/section_header.dart';
+import 'package:snacktrack/views/settings/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/setting_controller.dart';
