@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/history_controller.dart';
+import '../../controllers/meal_controller.dart' hide HistoryFilter;
 import '../../models/daily_summary_model.dart';
+import '../../models/meal_model.dart';
 import 'widgets/meal_card.dart';
 
 /// ## What changed in this file
@@ -181,9 +183,110 @@ class _MealHistoryScreenState extends State<MealHistoryScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        ...summary.meals.map((meal) => MealCard(meal: meal)),
+        ...summary.meals.map((meal) => MealCard(
+          meal: meal,
+          onEdit: () => _showEditSheet(context, meal),
+          onDelete: () => _confirmDelete(context, meal),
+        )),
         const SizedBox(height: 8),
       ],
+    );
+  }
+
+  void _confirmDelete(BuildContext context, MealModel meal) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Meal'),
+        content: Text('Remove "${meal.name}" from your history?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<MealController>().deleteMeal(meal.id);
+            },
+            child: Text('Delete', style: TextStyle(color: Colors.red.shade400)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditSheet(BuildContext context, MealModel meal) {
+    final nameCtrl = TextEditingController(text: meal.name);
+    final calCtrl = TextEditingController(text: meal.calories.toString());
+    final proteinCtrl = TextEditingController(text: meal.protein.toStringAsFixed(0));
+    final carbsCtrl = TextEditingController(text: meal.carbs.toStringAsFixed(0));
+    final fatCtrl = TextEditingController(text: meal.fat.toStringAsFixed(0));
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20, right: 20, top: 24,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Edit Meal', style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: 16),
+              TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),),
+              const SizedBox(height: 12),
+              TextField(controller: calCtrl, decoration: const InputDecoration(labelText: 'Calories', border: OutlineInputBorder()), keyboardType: TextInputType.number,),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(child: TextField(controller: proteinCtrl, decoration: const InputDecoration(labelText: 'Protein (g)', border: OutlineInputBorder()), keyboardType: TextInputType.number,)),
+                  const SizedBox(width: 10),
+                  Expanded(child: TextField(controller: carbsCtrl, decoration: const InputDecoration(labelText: 'Carbs (g)', border: OutlineInputBorder()), keyboardType: TextInputType.number,)),
+                  const SizedBox(width: 10),
+                  Expanded(child: TextField(controller: fatCtrl, decoration: const InputDecoration(labelText: 'Fat (g)', border: OutlineInputBorder()), keyboardType: TextInputType.number,)),
+                ],
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final updated = MealModel(
+                      id: meal.id,
+                      name: nameCtrl.text.trim().isEmpty ? meal.name : nameCtrl.text.trim(),
+                      type: meal.type,
+                      calories: int.tryParse(calCtrl.text) ?? meal.calories,
+                      protein: double.tryParse(proteinCtrl.text) ?? meal.protein,
+                      carbs: double.tryParse(carbsCtrl.text) ?? meal.carbs,
+                      fat: double.tryParse(fatCtrl.text) ?? meal.fat,
+                      loggedAt: meal.loggedAt,
+                      imageUrl: meal.imageUrl,
+                      source: meal.source,
+                      notes: meal.notes,
+                      analyzedBy: meal.analyzedBy,
+                    );
+                    context.read<MealController>().updateMeal(updated);
+                    Navigator.pop(ctx);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Save Changes'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

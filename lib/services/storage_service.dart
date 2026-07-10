@@ -23,6 +23,7 @@ class StorageService {
   static const String _userBoxName = 'user_box';
   static const String _settingsBoxName = 'settings_box';
   static const String _mealCacheBoxName = 'meal_cache';
+  static const String _offlineQueueBoxName = 'offline_queue';
 
   static const String _userKey = 'current_user';
   static const String _settingsKey = 'current_settings';
@@ -30,6 +31,7 @@ class StorageService {
   static late Box<UserModel> _userBox;
   static late Box<SettingsModel> _settingsBox;
   static late Box _mealCacheBox;
+  static late Box _offlineQueueBox;
 
   /// Call once in main.dart, AFTER Hive.initFlutter() and AFTER
   /// registering adapters:
@@ -41,6 +43,7 @@ class StorageService {
     _userBox = await Hive.openBox<UserModel>(_userBoxName);
     _settingsBox = await Hive.openBox<SettingsModel>(_settingsBoxName);
     _mealCacheBox = await Hive.openBox(_mealCacheBoxName);
+    _offlineQueueBox = await Hive.openBox(_offlineQueueBoxName);
   }
 
   // ── User ─────────────────────────────────────────────────────────────
@@ -64,6 +67,24 @@ class StorageService {
       _mealCacheBox.put(key, jsonData);
 
   static dynamic getMealCache(String key) => _mealCacheBox.get(key);
+
+  // ── Offline meal queue ────────────────────────────────────────────────
+
+  static Future<void> queueOfflineMeal(Map<String, dynamic> mealData) async {
+    final id = DateTime.now().millisecondsSinceEpoch.toString();
+    await _offlineQueueBox.put(id, mealData);
+  }
+
+  static Map<dynamic, dynamic> getPendingMeals() =>
+      _offlineQueueBox.toMap();
+
+  static Future<void> clearPendingMeals() async {
+    await _offlineQueueBox.clear();
+  }
+
+  static Future<void> removePendingMeal(dynamic key) async {
+    await _offlineQueueBox.delete(key);
+  }
 
   // ── Full wipe (used on logout) ──────────────────────────────────────
 

@@ -3,9 +3,11 @@ import '../../../models/meal_model.dart';
 
 class MealCard extends StatelessWidget {
   final MealModel meal;
-  final String? imagePath; // e.g. 'assets/images/grilled_salmon_avocado.jpg'
+  final String? imagePath;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
-  const MealCard({super.key, required this.meal, this.imagePath});
+  const MealCard({super.key, required this.meal, this.imagePath, this.onEdit, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -105,10 +107,57 @@ class MealCard extends StatelessWidget {
                     ),
                   ],
                 ),
+              if (onEdit != null || onDelete != null) ...[
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (onEdit != null)
+                      GestureDetector(
+                        onTap: onEdit,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.edit_outlined, size: 14, color: Theme.of(context).colorScheme.primary),
+                              const SizedBox(width: 4),
+                              Text('Edit', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.primary)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    if (onEdit != null && onDelete != null) const SizedBox(width: 8),
+                    if (onDelete != null)
+                      GestureDetector(
+                        onTap: onDelete,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.delete_outline, size: 14, color: Colors.red.shade400),
+                              const SizedBox(width: 4),
+                              Text('Delete', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.red.shade400)),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ],
-            ),
+            ],
           ),
-        ],
+        ),
+      ],
       ),
     );
   }

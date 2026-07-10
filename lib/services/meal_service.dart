@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/daily_summary_model.dart';
 import '../models/meal_model.dart';
+import 'storage_service.dart';
 
 /// Firestore-backed meal data layer.
 ///
@@ -36,14 +38,70 @@ class MealService {
   CollectionReference<Map<String, dynamic>> _mealsCollection(String uid) =>
       _firestore.collection('users').doc(uid).collection('meals');
 
-  /// Writes a new meal document. Returns the meal with its Firestore-
-  /// assigned ID attached (the [meal] passed in may have had a temporary
-  /// or empty `id` — the returned copy has the real one).
+  /// Writes a new meal document. Tries Firestore first; if the device is
+  /// offline, queues the meal in Hive and returns a local placeholder.
   Future<MealModel> saveMeal(MealModel meal) async {
     final uid = _requireUid();
-    final docRef = await _mealsCollection(uid).add(meal.toFirestoreMap());
-    final savedDoc = await docRef.get();
-    return MealModel.fromFirestore(savedDoc);
+    try {
+      final docRef = await _mealsCollection(uid).add(meal.toFirestoreMap());
+      final savedDoc = await docRef.get();
+      return MealModel.fromFirestore(savedDoc);
+    } on SocketException catch (_) {
+      return _saveOffline(meal);
+    } on FirebaseException catch (e) {
+      if (e.code == 'unavailable' || e.code == 'failed-precondition') {
+        return _saveOffline(meal);
+      }
+      rethrow;
+    }
+  }
+
+  MealModel _saveOffline(MealModel meal) {
+    final localId = 'offline_${DateTime.now().millisecondsSinceEpoch}';
+    final data = meal.toFirestoreMap(useServerTimestamp: false);
+    data['localId'] = localId;
+    StorageService.queueOfflineMeal({
+      ...data,
+      'loggedAt': meal.loggedAt.toIso8601String(),
+    });
+    return MealModel(
+      id: localId,
+      name: meal.name,
+      type: meal.type,
+      calories: meal.calories,
+      protein: meal.protein,
+      carbs: meal.carbs,
+      fat: meal.fat,
+      loggedAt: meal.loggedAt,
+      imageUrl: meal.imageUrl,
+      source: meal.source,
+      notes: meal.notes,
+      analyzedBy: 'offline',
+    );
+  }
+
+  /// Syncs any queued offline meals to Firestore. Call this when
+  /// connectivity is restored (e.g. on app resume or after a successful
+  /// Firestore write).
+  Future<int> syncPendingMeals() async {
+    final uid = _requireUid();
+    final pending = StorageService.getPendingMeals();
+    int synced = 0;
+    for (final entry in pending.entries) {
+      try {
+        final data = Map<String, dynamic>.from(entry.value as Map);
+        data.remove('localId');
+        if (data['loggedAt'] is String) {
+          data['loggedAt'] = Timestamp.fromDate(DateTime.parse(data['loggedAt']));
+        }
+        await _mealsCollection(uid).add(data);
+        await StorageService.removePendingMeal(entry.key);
+        synced++;
+      } catch (_) {
+        break;
+      }
+    }
+    return synced;
   }
 
   /// Real-time stream of today's meals, ordered newest first.
@@ -199,5 +257,21 @@ class MealService {
   Future<void> deleteMeal(String mealId) async {
     final uid = _requireUid();
     await _mealsCollection(uid).doc(mealId).delete();
+  }
+
+  /// Updates an existing meal document (e.g. after portion adjustment).
+  /// Only the fields present in [meal] are written; the document ID is
+  /// taken from [meal.id].
+  Future<void> updateMeal(MealModel meal) async {
+    final uid = _requireUid();
+    await _mealsCollection(uid).doc(meal.id).set(meal.toFirestoreMap(useServerTimestamp: false), SetOptions(merge: true));
+  }
+
+  /// Fetches a single meal by its document ID.
+  Future<MealModel?> getMeal(String mealId) async {
+    final uid = _requireUid();
+    final doc = await _mealsCollection(uid).doc(mealId).get();
+    if (!doc.exists) return null;
+    return MealModel.fromFirestore(doc);
   }
 }

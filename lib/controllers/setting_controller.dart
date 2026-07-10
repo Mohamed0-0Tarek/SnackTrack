@@ -39,6 +39,7 @@ class SettingController extends ChangeNotifier {
   double _goalProtein = 150;
   double _goalCarbs = 250;
   double _goalFat = 65;
+  int _goalWaterMl = 2000;
 
   double _textSize = 1; // 0=Compact, 1=Standard, 2=Enlarged
   bool _highContrast = false;
@@ -60,6 +61,7 @@ class SettingController extends ChangeNotifier {
   double get goalProtein => _goalProtein;
   double get goalCarbs => _goalCarbs;
   double get goalFat => _goalFat;
+  int get goalWaterMl => _goalWaterMl;
 
   double get textSize => _textSize;
   bool get highContrast => _highContrast;
@@ -131,6 +133,7 @@ class SettingController extends ChangeNotifier {
     _anonymousAnalytics = model.anonymousAnalytics;
     _geoTracking = model.geoTracking;
     _aiTrainingModel = model.aiTrainingModel;
+    _goalWaterMl = model.goalWaterMl;
     if (notify) notifyListeners();
   }
 
@@ -149,6 +152,7 @@ class SettingController extends ChangeNotifier {
         anonymousAnalytics: _anonymousAnalytics,
         geoTracking: _geoTracking,
         aiTrainingModel: _aiTrainingModel,
+        goalWaterMl: _goalWaterMl,
       );
 
   /// Writes the current in-memory state to both Hive and Firestore.
@@ -218,6 +222,12 @@ class SettingController extends ChangeNotifier {
 
   void setGoalFat(double value) {
     _goalFat = value;
+    notifyListeners();
+    _persist();
+  }
+
+  void setGoalWaterMl(int value) {
+    _goalWaterMl = value;
     notifyListeners();
     _persist();
   }

@@ -13,9 +13,11 @@ import 'controllers/profile_controller.dart';
 import 'views/settings/settings_screen.dart';
 import 'controllers/history_controller.dart';
 import 'controllers/setting_controller.dart';
+import 'controllers/water_controller.dart';
 import 'services/firebase_auth_service.dart';
 import 'services/meal_service.dart';
 import 'services/ai_service.dart';
+import 'services/water_service.dart';
 import 'views/splash/splash_screen.dart';
 import 'views/auth/sign_in_screen.dart';
 import 'views/auth/sign_up_screen.dart';
@@ -76,6 +78,8 @@ class _AppState extends State<App> {
   late final AiService _aiService;
   late final SettingController _settingController;
   late final WeeklyReportService _weeklyReportService;
+  late final WaterService _waterService;
+  late final WaterController _waterController;
   late final GoRouter _router;
 
   String? _lastKnownUid;
@@ -90,6 +94,8 @@ class _AppState extends State<App> {
     _mealService = MealService();
     _aiService = AiService();
     _weeklyReportService = WeeklyReportService();
+    _waterService = WaterService();
+    _waterController = WaterController(_waterService);
     _settingController = SettingController();
 
     // SettingController's constructor calls loadSettings() once, but at
@@ -179,6 +185,7 @@ class _AppState extends State<App> {
         ChangeNotifierProvider(create: (_) => ProfileController(_mealService)),
         ChangeNotifierProvider(create: (_) => HistoryController(_mealService)),
         ChangeNotifierProvider<SettingController>.value(value: _settingController),
+        ChangeNotifierProvider<WaterController>.value(value: _waterController),
       ],
       child: Consumer<SettingController>(
         builder: (context, settings, _) => MaterialApp.router(

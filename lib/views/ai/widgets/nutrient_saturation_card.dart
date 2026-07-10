@@ -1,120 +1,70 @@
 import 'package:flutter/material.dart';
+import '../../../services/weekly_report_service.dart';
 import 'custom_card.dart';
 
 class NutrientSaturationCard extends StatelessWidget {
-  const NutrientSaturationCard({super.key});
+  final WeeklyReport? report;
+
+  const NutrientSaturationCard({super.key, this.report});
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
+    final protein = report?.totalProtein ?? 0;
+    final carbs = report?.totalCarbs ?? 0;
+    final fat = report?.totalFat ?? 0;
+    final total = protein + carbs + fat;
+
     return CustomCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Nutrient Saturation', style: tt.headlineMedium),
-          const SizedBox(height: 14),
-          NutrientRow(
-            icon: Icons.water_drop_outlined,
-            iconColor: scheme.primary,
-            name: 'Magnesium Glycinate',
-            sub: '-12% vs Target',
-            trailing: Icon(
-              Icons.trending_down,
-              color: Colors.red.shade400,
-              size: 16,
-            ),
+          Row(
+            children: [
+              Icon(Icons.pie_chart_outline_rounded, color: scheme.primary, size: 20),
+              const SizedBox(width: 6),
+              Text('Nutrient Saturation', style: tt.headlineMedium),
+            ],
           ),
-          Divider(color: Theme.of(context).dividerColor, height: 20),
-          NutrientRow(
-            icon: Icons.wb_sunny_outlined,
-            iconColor: scheme.tertiary,
-            name: 'Vitamin D3 + K2',
-            sub: 'at Primal Levels',
-            trailing: Icon(
-              Icons.check_circle_outline,
-              color: scheme.primary,
-              size: 16,
-            ),
-          ),
-          Divider(color: Theme.of(context).dividerColor, height: 20),
-          NutrientRow(
-            icon: Icons.waves_rounded,
-            iconColor: scheme.secondary,
-            name: 'Omega-3 Index',
-            sub: '+5% vs Last Week',
-            trailing: Icon(Icons.trending_up, color: scheme.primary, size: 16),
+          const SizedBox(height: 6),
+          Text(
+            'Total macros: ${total.toStringAsFixed(0)}g',
+            style: tt.bodySmall,
           ),
           const SizedBox(height: 14),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {},
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  'VIEW FULL MICRONUTRIENT MAP',
-                  style: tt.labelSmall?.copyWith(
-                    color: scheme.primary,
-                    letterSpacing: 1.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ),
+          _StatRow(label: 'Protein', value: '${protein.toStringAsFixed(0)}g', color: scheme.primary),
+          const SizedBox(height: 8),
+          _StatRow(label: 'Carbs', value: '${carbs.toStringAsFixed(0)}g', color: scheme.tertiary),
+          const SizedBox(height: 8),
+          _StatRow(label: 'Fat', value: '${fat.toStringAsFixed(0)}g', color: scheme.secondary),
         ],
       ),
     );
   }
 }
 
-class NutrientRow extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String name;
-  final String sub;
-  final Widget trailing;
-
-  const NutrientRow({super.key, 
-    required this.icon,
-    required this.iconColor,
-    required this.name,
-    required this.sub,
-    required this.trailing,
-  });
+class _StatRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  const _StatRow({required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: iconColor.withAlpha(30),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: iconColor, size: 18),
+        Row(
+          children: [
+            Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            const SizedBox(width: 8),
+            Text(label, style: tt.bodyMedium),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                name,
-                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              Text(sub, style: tt.bodySmall),
-            ],
-          ),
-        ),
-        trailing,
+        Text(value, style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w600)),
       ],
     );
   }

@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class HeroHeader extends StatelessWidget {
-  const HeroHeader({super.key});
+  final int avgCalories;
+  final int mealCount;
+
+  const HeroHeader({super.key, this.avgCalories = 0, this.mealCount = 0});
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+
+    final today = DateTime.now();
+    final weekAgo = today.subtract(const Duration(days: 6));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -27,7 +33,7 @@ class HeroHeader extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          'Oct 23 — Oct 29',
+          '${_format(weekAgo)} — ${_format(today)}',
           style: tt.displayLarge?.copyWith(
             fontWeight: FontWeight.w800,
             height: 1.1,
@@ -35,7 +41,8 @@ class HeroHeader extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'Your metabolic efficiency is operating at peak levels. The AI has identified a 12% improvement in glucose stability compared to last week.',
+          '$mealCount meals logged this week. '
+          'Average $avgCalories kcal/day.',
           style: tt.bodyMedium?.copyWith(
             color: scheme.onSurface.withAlpha(160),
             height: 1.6,
@@ -43,5 +50,10 @@ class HeroHeader extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _format(DateTime d) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${months[d.month - 1]} ${d.day}';
   }
 }

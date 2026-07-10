@@ -153,6 +153,34 @@ class MealController extends ChangeNotifier {
     return groups;
   }
 
+  Future<void> deleteMeal(String mealId) async {
+    try {
+      await _mealService.deleteMeal(mealId);
+      history.removeWhere((m) => m.id == mealId);
+      notifyListeners();
+    } catch (e) {
+      error = 'Could not delete meal.';
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateMeal(MealModel updated) async {
+    try {
+      await _mealService.updateMeal(updated);
+      final idx = history.indexWhere((m) => m.id == updated.id);
+      if (idx != -1) history[idx] = updated;
+      notifyListeners();
+    } catch (e) {
+      error = 'Could not update meal.';
+      notifyListeners();
+    }
+  }
+
+  void updateAnalyzedMeal(MealModel meal) {
+    analyzedMeal = meal;
+    notifyListeners();
+  }
+
   void clearAnalysis() {
     analyzedMeal = null;
     analysisError = null;

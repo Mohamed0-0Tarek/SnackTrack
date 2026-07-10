@@ -19,6 +19,9 @@ import '../services/firebase_auth_service.dart';
 /// including on cold start, since Firebase persists its own session.
 class AuthController extends ChangeNotifier {
   final FirebaseAuthService _authService;
+  bool _notifyScheduled = false;
+  bool _disposed = false;
+
   AuthController(this._authService) {
     _listenToAuthChanges();
   }
@@ -33,12 +36,23 @@ class AuthController extends ChangeNotifier {
   /// either "definitely logged out" or "haven't checked yet".
   bool isInitialized = false;
 
+  void _scheduleNotifyListeners() {
+    if (_disposed || !hasListeners || _notifyScheduled) return;
+
+    _notifyScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _notifyScheduled = false;
+      if (_disposed || !hasListeners) return;
+      notifyListeners();
+    });
+  }
+
   Future<void> _listenToAuthChanges() async {
     _authService.authStateChanges.listen((User? firebaseUser) async {
       if (firebaseUser == null) {
         user = null;
         isInitialized = true;
-        notifyListeners();
+        _scheduleNotifyListeners();
         return;
       }
 
@@ -48,7 +62,7 @@ class AuthController extends ChangeNotifier {
         error = e.toString();
       } finally {
         isInitialized = true;
-        notifyListeners();
+        _scheduleNotifyListeners();
       }
     });
   }
@@ -56,7 +70,7 @@ class AuthController extends ChangeNotifier {
   Future<void> signIn(String email, String password) async {
     isLoading = true;
     error = null;
-    notifyListeners();
+    _scheduleNotifyListeners();
     try {
       user = await _authService.signIn(email, password);
       // _listenToAuthChanges will also fire and re-set `user`, which is
@@ -67,14 +81,14 @@ class AuthController extends ChangeNotifier {
       rethrow;
     } finally {
       isLoading = false;
-      notifyListeners();
+      _scheduleNotifyListeners();
     }
   }
 
   Future<void> signUp(String name, String email, String password) async {
     isLoading = true;
     error = null;
-    notifyListeners();
+    _scheduleNotifyListeners();
     try {
       user = await _authService.signUp(name, email, password);
     } catch (e) {
@@ -82,13 +96,13 @@ class AuthController extends ChangeNotifier {
       rethrow;
     } finally {
       isLoading = false;
-      notifyListeners();
+      _scheduleNotifyListeners();
     }
   }
 
   Future<void> logout() async {
     isLoading = true;
-    notifyListeners();
+    _scheduleNotifyListeners();
     try {
       await _authService.signOut();
       // user is cleared by the authStateChanges listener automatically.
@@ -97,14 +111,14 @@ class AuthController extends ChangeNotifier {
       rethrow;
     } finally {
       isLoading = false;
-      notifyListeners();
+      _scheduleNotifyListeners();
     }
   }
 
   Future<void> sendPasswordReset(String email) async {
     isLoading = true;
     error = null;
-    notifyListeners();
+    _scheduleNotifyListeners();
     try {
       await _authService.sendPasswordResetEmail(email);
     } catch (e) {
@@ -112,7 +126,7 @@ class AuthController extends ChangeNotifier {
       rethrow;
     } finally {
       isLoading = false;
-      notifyListeners();
+      _scheduleNotifyListeners();
     }
   }
 
@@ -127,6 +141,12 @@ class AuthController extends ChangeNotifier {
 
   bool get isEmailVerified => _authService.isEmailVerified;
 
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
   Future<void> synchronizeOnboardingProfile({
     required int age,
     required double weight,
@@ -134,7 +154,9 @@ class AuthController extends ChangeNotifier {
     required String objective,
   }) async {
     if (user == null) {
-      throw Exception('Active session metadata not found. Please log in again.');
+      throw Exception(
+        'Active session metadata not found. Please log in again.',
+      );
     }
 
     isLoading = true;
@@ -142,12 +164,14 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user!.id).update({
-        'age': age,
-        'weight': weight,
-        'height': height,
-        'objective': objective,
-      });
+      await FirebaseFirestore.instance.collection('users').doc(user!.id).update(
+        {
+          'age': age,
+          'weight': weight,
+          'height': height,
+          'objective': objective,
+        },
+      );
 
       user = user!.copyWith(
         age: age,
@@ -160,7 +184,7 @@ class AuthController extends ChangeNotifier {
       rethrow;
     } finally {
       isLoading = false;
-      notifyListeners();
+      _scheduleNotifyListeners();
     }
   }
 }

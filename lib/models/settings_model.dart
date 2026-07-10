@@ -43,6 +43,9 @@ class SettingsModel extends HiveObject {
   @HiveField(10)
   bool adaptiveAssist;
 
+  @HiveField(14)
+  int goalWaterMl;
+
   // ── Privacy (Phase E) ─────────────────────────────────────────────────
   @HiveField(11)
   bool anonymousAnalytics;
@@ -65,6 +68,7 @@ class SettingsModel extends HiveObject {
     this.highContrast = false,
     this.voiceSensitivity = 1,
     this.adaptiveAssist = false,
+    this.goalWaterMl = 2000,
     this.anonymousAnalytics = true,
     this.geoTracking = false,
     this.aiTrainingModel = true,
@@ -82,6 +86,7 @@ class SettingsModel extends HiveObject {
         highContrast: json['highContrast'] ?? false,
         voiceSensitivity: json['voiceSensitivity'] ?? 1,
         adaptiveAssist: json['adaptiveAssist'] ?? false,
+        goalWaterMl: json['goalWaterMl'] ?? 2000,
         anonymousAnalytics: json['anonymousAnalytics'] ?? true,
         geoTracking: json['geoTracking'] ?? false,
         aiTrainingModel: json['aiTrainingModel'] ?? true,
@@ -99,6 +104,7 @@ class SettingsModel extends HiveObject {
         'highContrast': highContrast,
         'voiceSensitivity': voiceSensitivity,
         'adaptiveAssist': adaptiveAssist,
+        'goalWaterMl': goalWaterMl,
         'anonymousAnalytics': anonymousAnalytics,
         'geoTracking': geoTracking,
         'aiTrainingModel': aiTrainingModel,

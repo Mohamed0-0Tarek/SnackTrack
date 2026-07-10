@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'custom_card.dart';
 
 class EnergyFluxCard extends StatelessWidget {
-  const EnergyFluxCard({super.key});
+  final int avgCalories;
+
+  const EnergyFluxCard({super.key, this.avgCalories = 0});
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+
+    final stability = avgCalories > 0
+        ? (avgCalories / 2200).clamp(0.0, 1.0)
+        : 0.0;
 
     return CustomCard(
       child: Column(
@@ -22,7 +28,7 @@ class EnergyFluxCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Sustained vitality levels across 16-hour active windows.',
+            'Average $avgCalories kcal/day this week.',
             style: tt.bodySmall,
           ),
           const SizedBox(height: 14),
@@ -30,11 +36,11 @@ class EnergyFluxCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'STABILITY',
+                'CALORIC INTAKE',
                 style: tt.labelSmall?.copyWith(letterSpacing: 1.2),
               ),
               Text(
-                'High',
+                '$avgCalories kcal',
                 style: tt.headlineMedium?.copyWith(
                   color: scheme.primary,
                   fontWeight: FontWeight.w700,
@@ -46,7 +52,7 @@ class EnergyFluxCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: 0.82,
+              value: stability,
               minHeight: 5,
               backgroundColor: scheme.primary.withAlpha(30),
               valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),

@@ -18,12 +18,14 @@ import 'package:provider/provider.dart';
 
 import '../../controllers/dashboard_controller.dart';
 import '../../controllers/setting_controller.dart';
+import '../../controllers/water_controller.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/widgets/loading_overlay.dart';
 import 'widgets/calorie_ring_widget.dart';
 import 'widgets/daily_log_item.dart';
 import 'widgets/macro_card.dart';
 import 'widgets/smart_analysis_card.dart';
+import 'widgets/water_tracker_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -42,6 +44,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _load() {
     final settings = context.read<SettingController>();
     context.read<DashboardController>().loadSummary(settings);
+    context.read<WaterController>().loadToday();
+  }
+
+  void _showWaterOptions(BuildContext context) {
+    final waterCtrl = context.read<WaterController>();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Log Water', style: Theme.of(context).textTheme.headlineMedium),
+            const SizedBox(height: 16),
+            _WaterAmountButton(ml: 200, label: 'Small glass (200ml)', icon: Icons.water_drop_outlined, onTap: () { waterCtrl.logWater(200); Navigator.pop(ctx); }),
+            const SizedBox(height: 10),
+            _WaterAmountButton(ml: 350, label: 'Medium glass (350ml)', icon: Icons.water_drop_outlined, onTap: () { waterCtrl.logWater(350); Navigator.pop(ctx); }),
+            const SizedBox(height: 10),
+            _WaterAmountButton(ml: 500, label: 'Large bottle (500ml)', icon: Icons.water_drop_outlined, onTap: () { waterCtrl.logWater(500); Navigator.pop(ctx); }),
+            const SizedBox(height: 10),
+            _WaterAmountButton(ml: 1000, label: 'Full liter (1000ml)', icon: Icons.water_drop_outlined, onTap: () { waterCtrl.logWater(1000); Navigator.pop(ctx); }),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -90,6 +122,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     final summary = controller.summary;
+    final settings = context.read<SettingController>();
     if (summary == null) {
       return Center(child: Text('No data available', style: tt.bodyLarge));
     }
@@ -165,9 +198,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
 
+          const SizedBox(height: 16),
+
+          // ── 3. Water tracker ────────────────────────────────────────────
+          WaterTrackerWidget(
+            currentMl: context.watch<WaterController>().todayTotalMl,
+            goalMl: settings.goalWaterMl,
+            onAdd: () => _showWaterOptions(context),
+            onDelete: null,
+          ),
+
           const SizedBox(height: 20),
 
-          // ── 3. Smart Analysis card ─────────────────────────────────────
+          // ── 4. Smart Analysis card ─────────────────────────────────────
           // Real AI tip once ≥2 meals are logged (handled in the
           // controller); shows a neutral placeholder otherwise so the
           // card doesn't look broken before enough data exists.
@@ -180,7 +223,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           const SizedBox(height: 28),
 
-          // ── 4. Daily Log header ────────────────────────────────────────
+          // ── 5. Daily Log header ────────────────────────────────────────
           Text(
             'Daily Log',
             style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -201,6 +244,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           const SizedBox(height: 24),
         ],
+      ),
+    );
+  }
+}
+
+class _WaterAmountButton extends StatelessWidget {
+  final int ml;
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _WaterAmountButton({
+    required this.ml,
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.dividerColor, width: 1),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: colors.primary, size: 22),
+            const SizedBox(width: 12),
+            Text(label, style: theme.textTheme.labelLarge),
+            const Spacer(),
+            Icon(Icons.add_circle_outline, color: colors.primary, size: 20),
+          ],
+        ),
       ),
     );
   }

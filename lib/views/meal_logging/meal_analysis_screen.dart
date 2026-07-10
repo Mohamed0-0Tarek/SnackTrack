@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/meal_controller.dart';
+import '../../models/meal_model.dart';
 
 class MealAnalysisScreen extends StatelessWidget {
   const MealAnalysisScreen({super.key});
@@ -18,7 +19,97 @@ class MealAnalysisScreen extends StatelessWidget {
         backgroundColor: theme.scaffoldBackgroundColor,
         body: const Center(child: CircularProgressIndicator()),
       );
-    }
+}
+
+void showPortionAdjuster(BuildContext context, MealController controller) {
+  final meal = controller.analyzedMeal;
+  if (meal == null) return;
+
+  final factorCtrl = TextEditingController(text: '1.0');
+  final theme = Theme.of(context);
+  final colors = theme.colorScheme;
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: theme.cardColor,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (ctx) => Padding(
+      padding: EdgeInsets.only(
+        left: 20, right: 20, top: 24,
+        bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Adjust Portions', style: theme.textTheme.headlineMedium),
+          const SizedBox(height: 8),
+          Text(
+            'Enter a portion multiplier (e.g. 0.5 for half, 2.0 for double)',
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: factorCtrl,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: 'Portion factor',
+              hintText: '1.0',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Calories: ${(meal.calories * 1.0).toInt()} → ${(meal.calories * (double.tryParse(factorCtrl.text) ?? 1.0)).toInt()} kcal',
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                final factor = double.tryParse(factorCtrl.text) ?? 1.0;
+                if (factor <= 0) return;
+                final adjusted = MealModel(
+                  id: meal.id,
+                  name: meal.name,
+                  type: meal.type,
+                  calories: (meal.calories * factor).round(),
+                  protein: meal.protein * factor,
+                  carbs: meal.carbs * factor,
+                  fat: meal.fat * factor,
+                  loggedAt: meal.loggedAt,
+                  imageUrl: meal.imageUrl,
+                  source: meal.source,
+                  notes: meal.notes,
+                  analyzedBy: meal.analyzedBy,
+                );
+                controller.updateAnalyzedMeal(adjusted);
+                Navigator.pop(ctx);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colors.primary,
+                foregroundColor: colors.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Apply Adjustment'),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -116,7 +207,7 @@ class MealAnalysisScreen extends StatelessWidget {
                     // ── Adjust Portions ───────────────────────────────────
                     Center(
                       child: TextButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => showPortionAdjuster(context, controller),
                         child: Text(
                           'Adjust Portions',
                           style: theme.textTheme.bodyMedium?.copyWith(
