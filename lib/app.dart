@@ -21,6 +21,7 @@ import 'services/water_service.dart';
 import 'views/splash/splash_screen.dart';
 import 'views/auth/sign_in_screen.dart';
 import 'views/auth/sign_up_screen.dart';
+import 'views/auth/forgot_password_screen.dart';
 import 'views/onboarding/onboarding_screen.dart';
 import 'views/ai/weekly_summary_screen.dart';
 import 'views/ai/ai_coach_screen.dart';
@@ -117,7 +118,8 @@ class _AppState extends State<App> {
         final bool loggedIn = _authController.user != null;
         final bool isSplashing = state.matchedLocation == AppRoutes.splash;
         final bool isAuthenticating = state.matchedLocation == AppRoutes.signIn ||
-            state.matchedLocation == AppRoutes.signUp;
+            state.matchedLocation == AppRoutes.signUp ||
+            state.matchedLocation == AppRoutes.forgotPassword;
 
         final bool isOnboarded = _authController.user?.objective != null;
 
@@ -145,6 +147,7 @@ class _AppState extends State<App> {
         GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
         GoRoute(path: AppRoutes.signIn, builder: (_, __) => const SignInScreen()),
         GoRoute(path: AppRoutes.signUp, builder: (_, __) => const SignUpScreen()),
+        GoRoute(path: AppRoutes.forgotPassword, builder: (_, __) => const ForgotPasswordScreen()),
         GoRoute(path: AppRoutes.onboard, builder: (_, __) => const OnboardingScreen()),
         GoRoute(path: AppRoutes.main, builder: (_, __) => const MainScreen(initialIndex: 0)),
         GoRoute(path: AppRoutes.profile, builder: (_, __) => const MainScreen(initialIndex: 4)),

@@ -12,4 +12,5 @@ class AppRoutes {
   static const String mealHistory = '/history';
   static const String weeklySummary = '/weekly-summary';
   static const String settings = '/settings'; // Added for Phase B
+  static const String forgotPassword = '/forgot-password';
 }

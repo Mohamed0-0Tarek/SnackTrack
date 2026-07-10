@@ -81,7 +81,7 @@ class LoginFormState extends State<LoginForm> {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: () {},
+              onPressed: () => context.push(AppRoutes.forgotPassword),
               child: Text(
                 'Forgot password?',
                 style: tt.labelMedium?.copyWith(color: primary),
