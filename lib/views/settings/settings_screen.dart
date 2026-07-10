@@ -250,6 +250,126 @@ class AppSettingsScreen extends StatelessWidget {
 
             const SizedBox(height: 12),
 
+            // ── Nutrition Goals card ───────────────────────────────────────
+            SectionCard(
+              isDark: isDark,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SectionHeader(
+                    icon: Icons.restaurant_outlined,
+                    label: 'Nutrition Goals',
+                    iconColor: const Color(0xFF00B4DB),
+                    isDark: isDark,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Set your daily targets for calories, macros, and hydration.',
+                    style: tt.bodySmall?.copyWith(
+                      color: scheme.onSurface.withAlpha(120),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _GoalRow(
+                    icon: Icons.local_fire_department_outlined,
+                    iconColor: const Color(0xFFFF6B35),
+                    label: 'Calories',
+                    value: '${settings.goalCalories} kcal',
+                    isDark: isDark,
+                    onTap: () => _editGoal(
+                      context,
+                      title: 'Daily Calorie Goal',
+                      unit: 'kcal',
+                      initialValue: settings.goalCalories.toDouble(),
+                      min: 1000,
+                      max: 5000,
+                      divisions: 80,
+                      decimals: 0,
+                      onSaved: (v) => settings.setGoalCalories(v.round()),
+                    ),
+                  ),
+                  AppDivider(isDark: isDark),
+                  _GoalRow(
+                    icon: Icons.fitness_center_outlined,
+                    iconColor: const Color(0xFF6A3DE8),
+                    label: 'Protein',
+                    value: '${settings.goalProtein.round()} g',
+                    isDark: isDark,
+                    onTap: () => _editGoal(
+                      context,
+                      title: 'Daily Protein Goal',
+                      unit: 'g',
+                      initialValue: settings.goalProtein,
+                      min: 30,
+                      max: 300,
+                      divisions: 54,
+                      decimals: 0,
+                      onSaved: (v) => settings.setGoalProtein(v),
+                    ),
+                  ),
+                  AppDivider(isDark: isDark),
+                  _GoalRow(
+                    icon: Icons.grain_rounded,
+                    iconColor: const Color(0xFF00B4DB),
+                    label: 'Carbs',
+                    value: '${settings.goalCarbs.round()} g',
+                    isDark: isDark,
+                    onTap: () => _editGoal(
+                      context,
+                      title: 'Daily Carbs Goal',
+                      unit: 'g',
+                      initialValue: settings.goalCarbs,
+                      min: 30,
+                      max: 600,
+                      divisions: 114,
+                      decimals: 0,
+                      onSaved: (v) => settings.setGoalCarbs(v),
+                    ),
+                  ),
+                  AppDivider(isDark: isDark),
+                  _GoalRow(
+                    icon: Icons.water_drop_outlined,
+                    iconColor: const Color(0xFF4CAF50),
+                    label: 'Fat',
+                    value: '${settings.goalFat.round()} g',
+                    isDark: isDark,
+                    onTap: () => _editGoal(
+                      context,
+                      title: 'Daily Fat Goal',
+                      unit: 'g',
+                      initialValue: settings.goalFat,
+                      min: 20,
+                      max: 200,
+                      divisions: 36,
+                      decimals: 0,
+                      onSaved: (v) => settings.setGoalFat(v),
+                    ),
+                  ),
+                  AppDivider(isDark: isDark),
+                  _GoalRow(
+                    icon: Icons.water_outlined,
+                    iconColor: const Color(0xFF2196F3),
+                    label: 'Water',
+                    value: '${settings.goalWaterMl} ml',
+                    isDark: isDark,
+                    onTap: () => _editGoal(
+                      context,
+                      title: 'Daily Water Goal',
+                      unit: 'ml',
+                      initialValue: settings.goalWaterMl.toDouble(),
+                      min: 1000,
+                      max: 5000,
+                      divisions: 40,
+                      decimals: 0,
+                      onSaved: (v) => settings.setGoalWaterMl(v.round()),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
             // ── Security & account card ───────────────────────────────────────
             SectionCard(
               isDark: isDark,
@@ -322,4 +442,190 @@ class AppSettingsScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+// ─── Goal Row ────────────────────────────────────────────────────────────────
+
+class _GoalRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _GoalRow({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: iconColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ),
+              Text(
+                value,
+                style: tt.bodyMedium?.copyWith(
+                  color: scheme.onSurface.withAlpha(160),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: scheme.onSurface.withAlpha(120),
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Goal Edit Dialog ────────────────────────────────────────────────────────
+
+Future<void> _editGoal(
+  BuildContext context, {
+  required String title,
+  required String unit,
+  required double initialValue,
+  required double min,
+  required double max,
+  required int divisions,
+  required int decimals,
+  required void Function(double) onSaved,
+}) async {
+  double value = initialValue;
+
+  final result = await showDialog<double>(
+    context: context,
+    builder: (ctx) {
+      final scheme = Theme.of(ctx).colorScheme;
+      final tt = Theme.of(ctx).textTheme;
+
+      return StatefulBuilder(
+        builder: (ctx, setState) {
+          final display = decimals == 0
+              ? value.round().toString()
+              : value.toStringAsFixed(decimals);
+
+          return AlertDialog(
+            backgroundColor: Theme.of(ctx).cardColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Text(
+              title,
+              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$display $unit',
+                  style: tt.headlineMedium?.copyWith(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SliderTheme(
+                  data: SliderTheme.of(ctx).copyWith(
+                    trackHeight: 3,
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 7,
+                    ),
+                    overlayShape: const RoundSliderOverlayShape(
+                      overlayRadius: 14,
+                    ),
+                    activeTrackColor: scheme.primary,
+                    inactiveTrackColor: scheme.primary.withAlpha(38),
+                    thumbColor: scheme.primary,
+                  ),
+                  child: Slider(
+                    value: value,
+                    min: min,
+                    max: max,
+                    divisions: divisions,
+                    onChanged: (v) => setState(() => value = v),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${min.round()} $unit',
+                      style: tt.labelSmall?.copyWith(
+                        color: scheme.onSurface.withAlpha(120),
+                      ),
+                    ),
+                    Text(
+                      '${max.round()} $unit',
+                      style: tt.labelSmall?.copyWith(
+                        color: scheme.onSurface.withAlpha(120),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  'Cancel',
+                  style: tt.labelLarge?.copyWith(
+                    color: scheme.onSurface.withAlpha(160),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, value),
+                child: Text(
+                  'Save',
+                  style: tt.labelLarge?.copyWith(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+
+  if (result != null) onSaved(result);
 }
