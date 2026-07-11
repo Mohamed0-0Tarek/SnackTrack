@@ -26,6 +26,11 @@ class HistoryController extends ChangeNotifier {
   bool isLoading = false;
   String? error;
   String searchQuery = '';
+  int _goalCalories = 2000;
+
+  void setGoalCalories(int value) {
+    _goalCalories = value;
+  }
 
   Future<void> loadHistory() async {
     isLoading = true;
@@ -80,13 +85,7 @@ class HistoryController extends ChangeNotifier {
 
   /// Groups a flat list of meals (newest-first, as returned by
   /// MealService.getMealHistory) into one DailySummaryModel per day,
-  /// sorted newest-day-first.
-  ///
-  /// `calorieGoal` is hardcoded to 2000 here since per-user goals
-  /// (Firestore `users/{uid}/settings`) aren't wired into this
-  /// controller yet — that's the next piece of work (Settings/
-  /// SettingController), at which point this should read the real
-  /// goal instead of a constant.
+  /// sorted newest-day-first. Goal calories come from [setGoalCalories].
   List<DailySummaryModel> _groupByDay(List<MealModel> meals) {
     final Map<String, List<MealModel>> map = {};
     for (final meal in meals) {
@@ -104,7 +103,7 @@ class HistoryController extends ChangeNotifier {
           int.parse(parts[2]),
         ),
         totalCalories: dayMeals.fold(0, (sum, m) => sum + m.calories),
-        calorieGoal: 2000,
+        calorieGoal: _goalCalories,
         totalProtein: dayMeals.fold(0.0, (sum, m) => sum + m.protein),
         totalCarbs: dayMeals.fold(0.0, (sum, m) => sum + m.carbs),
         totalFat: dayMeals.fold(0.0, (sum, m) => sum + m.fat),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../controllers/setting_controller.dart';
 import '../../controllers/weekly_report_controller.dart';
 import 'widgets/caloric_flux_card.dart';
 import 'widgets/header.dart';
@@ -32,6 +33,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<WeeklyReportController>();
+    final settings = context.watch<SettingController>();
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -81,7 +83,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                 dailyCalories: report?.dailyCalories ??
                     List.filled(7, 0),
                 days: _dayLabels(),
-                goalCalories: 2000,
+                goalCalories: settings.goalCalories,
               ),
               const SizedBox(height: 14),
 

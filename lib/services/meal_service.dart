@@ -158,7 +158,7 @@ class MealService {
     return DailySummaryModel(
       date: date,
       totalCalories: totalCalories,
-      calorieGoal: 2200,
+      calorieGoal: 0,
       totalProtein: totalProtein,
       totalCarbs: totalCarbs,
       totalFat: totalFat,

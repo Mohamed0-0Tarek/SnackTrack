@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/history_controller.dart';
 import '../../controllers/meal_controller.dart' hide HistoryFilter;
+import '../../controllers/setting_controller.dart';
 import '../../models/daily_summary_model.dart';
 import '../../models/meal_model.dart';
 import 'widgets/meal_card.dart';
@@ -29,7 +30,11 @@ class _MealHistoryScreenState extends State<MealHistoryScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<HistoryController>().loadHistory();
+      final controller = context.read<HistoryController>();
+      controller.setGoalCalories(
+        context.read<SettingController>().goalCalories,
+      );
+      controller.loadHistory();
     });
   }
 
