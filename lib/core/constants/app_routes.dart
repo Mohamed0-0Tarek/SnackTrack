@@ -14,4 +14,5 @@ class AppRoutes {
   static const String settings = '/settings'; // Added for Phase B
   static const String forgotPassword = '/forgot-password';
   static const String changePassword = '/change-password';
+  static const String weightTracking = '/weight-tracking';
 }

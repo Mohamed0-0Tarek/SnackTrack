@@ -372,6 +372,39 @@ class AppSettingsScreen extends StatelessWidget {
 
             const SizedBox(height: 12),
 
+            // ── Health Tracking card ────────────────────────────────────────
+            SectionCard(
+              isDark: isDark,
+              child: Column(
+                children: [
+                  SectionHeader(
+                    icon: Icons.favorite_outline,
+                    label: 'Health Tracking',
+                    iconColor: const Color(0xFF4CAF50),
+                    isDark: isDark,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Monitor your weight, measurements, and progress over time.',
+                    style: tt.bodySmall?.copyWith(
+                      color: scheme.onSurface.withAlpha(120),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _GoalRow(
+                    icon: Icons.monitor_weight_outlined,
+                    iconColor: const Color(0xFF6A3DE8),
+                    label: 'Weight Tracking',
+                    value: '',
+                    isDark: isDark,
+                    onTap: () => context.push(AppRoutes.weightTracking),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
             // ── Security & account card ───────────────────────────────────────
             SectionCard(
               isDark: isDark,

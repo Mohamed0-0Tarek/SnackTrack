@@ -209,6 +209,16 @@ class AuthController extends ChangeNotifier {
         },
       );
 
+      // Seed the first weight entry for chart continuity
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user!.id)
+          .collection('weights')
+          .add({
+        'weightKg': weight,
+        'loggedAt': Timestamp.now(),
+      });
+
       user = user!.copyWith(
         age: age,
         weight: weight,

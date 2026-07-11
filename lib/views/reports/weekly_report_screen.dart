@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/setting_controller.dart';
 import '../../controllers/weekly_report_controller.dart';
+import '../../controllers/weight_controller.dart';
+import '../../core/constants/app_routes.dart';
 import 'widgets/caloric_flux_card.dart';
 import 'widgets/header.dart';
 import 'widgets/macro_integrity_card.dart';
 import 'widgets/oracle_card.dart';
 import 'widgets/stats_grid.dart';
 import 'widgets/view_summary_button.dart';
+import 'widgets/weight_card.dart';
 
 /// ## What changed in this file
 /// Was fully static — every card (`CaloricFluxCard`, `MacroIntegrityCard`,
@@ -27,6 +31,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<WeeklyReportController>().loadReport();
+      context.read<WeightController>().loadHistory();
     });
   }
 
@@ -34,6 +39,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
   Widget build(BuildContext context) {
     final controller = context.watch<WeeklyReportController>();
     final settings = context.watch<SettingController>();
+    final weightCtrl = context.watch<WeightController>();
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -113,6 +119,15 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
               // for now (hydration/sleep not tracked yet)
               StatsGrid(
                 avgCalories: report?.avgCalories ?? 0,
+              ),
+              const SizedBox(height: 14),
+
+              // Weight tracking card — real data + tappable
+              WeightCard(
+                latestWeight: weightCtrl.latestWeight?.weightKg,
+                weightChange: weightCtrl.weightChangeLastWeek,
+                trendDirection: weightCtrl.trendDirection,
+                onTap: () => context.push(AppRoutes.weightTracking),
               ),
               const SizedBox(height: 20),
 
