@@ -25,6 +25,8 @@ class MealModel {
   final String? source;
   final String? notes;
   final String? analyzedBy; // e.g. "gemini-1.5", "manual", "favorite"
+  final Map<String, double>? vitamins; // e.g. {"Vitamin A": 0.85, "Vitamin C": 0.42}
+  final Map<String, double>? minerals; // e.g. {"Iron": 0.28, "Magnesium": 0.55}
 
   MealModel({
     required this.id,
@@ -39,6 +41,8 @@ class MealModel {
     this.source,
     this.notes,
     this.analyzedBy,
+    this.vitamins,
+    this.minerals,
   });
 
   /// Old JSON path — kept for any code still using REST-style payloads.
@@ -92,6 +96,16 @@ class MealModel {
       source: data['source'],
       notes: data['notes'],
       analyzedBy: data['analyzedBy'],
+      vitamins: data['vitamins'] != null
+          ? Map<String, double>.from(
+              (data['vitamins'] as Map).map((k, v) => MapEntry(k, (v as num).toDouble())),
+            )
+          : null,
+      minerals: data['minerals'] != null
+          ? Map<String, double>.from(
+              (data['minerals'] as Map).map((k, v) => MapEntry(k, (v as num).toDouble())),
+            )
+          : null,
     );
   }
 
@@ -114,5 +128,7 @@ class MealModel {
         if (source != null) 'source': source,
         if (notes != null) 'notes': notes,
         if (analyzedBy != null) 'analyzedBy': analyzedBy,
+        if (vitamins != null) 'vitamins': vitamins,
+        if (minerals != null) 'minerals': minerals,
       };
 }

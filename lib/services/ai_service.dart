@@ -66,12 +66,27 @@ class AiService {
     final prompt = '''
 You are a nutrition analysis assistant. Given a meal description, respond
 with ONLY a JSON object (no markdown, no commentary) with this exact shape:
-{"name": string, "calories": number, "protein": number, "carbs": number, "fat": number, "notes": string}
+{
+  "name": string,
+  "calories": number,
+  "protein": number,
+  "carbs": number,
+  "fat": number,
+  "vitamins": {"Vitamin A": number (0-1), "Vitamin C": number (0-1), ...},
+  "minerals": {"Iron": number (0-1), "Magnesium": number (0-1), ...},
+  "notes": string
+}
+Include common vitamins and minerals where you can estimate them from the
+meal description. Use 0-1 values representing fraction of daily value.
+Omit vitamins or minerals if you cannot estimate them.
 
 Meal description: "$description"
 ''';
 
     final json = await _callModel(prompt);
+    final vitaminsRaw = json['vitamins'] as Map<String, dynamic>?;
+    final mineralsRaw = json['minerals'] as Map<String, dynamic>?;
+
     return MealModel(
       id: '', // assigned by MealService.saveMeal on persist
       name: json['name'] ?? description,
@@ -82,6 +97,12 @@ Meal description: "$description"
       loggedAt: DateTime.now(),
       notes: json['notes'] as String?,
       analyzedBy: 'gemini-2.5-flash-lite',
+      vitamins: vitaminsRaw?.map(
+        (k, v) => MapEntry(k, (v as num).toDouble()),
+      ),
+      minerals: mineralsRaw?.map(
+        (k, v) => MapEntry(k, (v as num).toDouble()),
+      ),
     );
   }
 

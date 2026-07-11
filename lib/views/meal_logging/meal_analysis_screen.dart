@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/meal_controller.dart';
+import '../../controllers/setting_controller.dart';
 import '../../models/meal_model.dart';
 
 class MealAnalysisScreen extends StatelessWidget {
@@ -129,7 +130,12 @@ void showPortionAdjuster(BuildContext context, MealController controller) {
                     const SizedBox(height: 20),
 
                     // ── Health score card ─────────────────────────────────
-                    _HealthScoreCard(score: 85),
+                    _HealthScoreCard(
+                      score: _computeHealthScore(
+                        meal,
+                        context.watch<SettingController>(),
+                      ),
+                    ),
 
                     const SizedBox(height: 24),
 
@@ -144,52 +150,62 @@ void showPortionAdjuster(BuildContext context, MealController controller) {
                     const SizedBox(height: 24),
 
                     // ── Vitamins ──────────────────────────────────────────
-                    _NutrientSection(
-                      title: 'Vitamins',
-                      items: const [
-                        _NutrientItem(
-                          name: 'Vitamin A',
-                          percent: 0.85,
-                          label: '85%',
+                    if (meal.vitamins != null && meal.vitamins!.isNotEmpty)
+                      _NutrientSection(
+                        title: 'Vitamins',
+                        items: meal.vitamins!.entries.map((e) {
+                          final pct = (e.value * 100).round();
+                          return _NutrientItem(
+                            name: e.key,
+                            percent: e.value,
+                            label: '$pct%',
+                          );
+                        }).toList(),
+                        color: colors.primary,
+                      )
+                    else ...[
+                      _SectionTitle(
+                        icon: Icons.eco,
+                        title: 'Vitamins',
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No micronutrient data available. Try re-analyzing with a more detailed description.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
                         ),
-                        _NutrientItem(
-                          name: 'Vitamin C',
-                          percent: 0.42,
-                          label: '42%',
-                        ),
-                        _NutrientItem(
-                          name: 'Vitamin K',
-                          percent: 1.0,
-                          label: '100%+',
-                        ),
-                      ],
-                      color: colors.primary,
-                    ),
+                      ),
+                    ],
 
                     const SizedBox(height: 24),
 
                     // ── Minerals ──────────────────────────────────────────
-                    _NutrientSection(
-                      title: 'Minerals',
-                      items: const [
-                        _NutrientItem(
-                          name: 'Iron',
-                          percent: 0.28,
-                          label: '28%',
+                    if (meal.minerals != null && meal.minerals!.isNotEmpty)
+                      _NutrientSection(
+                        title: 'Minerals',
+                        items: meal.minerals!.entries.map((e) {
+                          final pct = (e.value * 100).round();
+                          return _NutrientItem(
+                            name: e.key,
+                            percent: e.value,
+                            label: '$pct%',
+                          );
+                        }).toList(),
+                        color: colors.secondary,
+                      )
+                    else ...[
+                      _SectionTitle(
+                        icon: Icons.grain,
+                        title: 'Minerals',
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No micronutrient data available. Try re-analyzing with a more detailed description.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
                         ),
-                        _NutrientItem(
-                          name: 'Magnesium',
-                          percent: 0.55,
-                          label: '55%',
-                        ),
-                        _NutrientItem(
-                          name: 'Potassium',
-                          percent: 0.15,
-                          label: '15%',
-                        ),
-                      ],
-                      color: colors.secondary,
-                    ),
+                      ),
+                    ],
 
                     const SizedBox(height: 32),
 
@@ -306,10 +322,24 @@ class _HealthScoreCard extends StatelessWidget {
   final int score;
   const _HealthScoreCard({required this.score});
 
+  Color _ringColor() {
+    if (score >= 80) return const Color(0xFF00E676);
+    if (score >= 60) return const Color(0xFFFFC107);
+    if (score >= 40) return const Color(0xFFFF9800);
+    return const Color(0xFFE53935);
+  }
+
+  String _label() {
+    if (score >= 80) return 'Well-balanced meal';
+    if (score >= 60) return 'Moderate balance';
+    if (score >= 40) return 'Needs adjustment';
+    return 'Highly unbalanced';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final ringColor = _ringColor();
 
     return Container(
       width: double.infinity,
@@ -328,7 +358,7 @@ class _HealthScoreCard extends StatelessWidget {
             child: CustomPaint(
               painter: _ScoreRingPainter(
                 score: score / 100,
-                color: colors.secondary,
+                color: ringColor,
                 trackColor: theme.dividerColor,
               ),
               child: Center(
@@ -363,13 +393,13 @@ class _HealthScoreCard extends StatelessWidget {
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: colors.primary,
+                  color: ringColor,
                   shape: BoxShape.circle,
                 ),
               ),
               const SizedBox(width: 8),
               Text(
-                'Optimal Nutrient Density',
+                _label(),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.hintColor,
                 ),
@@ -722,4 +752,32 @@ class _LogButton extends StatelessWidget {
       ),
     );
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Health Score Computation
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Computes a 0-100 health score based on how well a single meal's macros
+/// align with 1/3 of the user's daily goals (breakfast/lunch/dinner split).
+/// Higher scores mean the meal is well-proportioned relative to the goals.
+int _computeHealthScore(MealModel meal, SettingController settings) {
+  if (settings.goalCalories <= 0) return 50;
+
+  double component(double actual, double expected) {
+    if (expected <= 0) return 100;
+    return max(0, 100 - ((actual - expected).abs() / expected) * 100);
+  }
+
+  final expectedCal = settings.goalCalories / 3;
+  final expectedProtein = settings.goalProtein / 3;
+  final expectedCarbs = settings.goalCarbs / 3;
+  final expectedFat = settings.goalFat / 3;
+
+  final calScore = component(meal.calories.toDouble(), expectedCal);
+  final proteinScore = component(meal.protein, expectedProtein);
+  final carbsScore = component(meal.carbs, expectedCarbs);
+  final fatScore = component(meal.fat, expectedFat);
+
+  return ((calScore + proteinScore + carbsScore + fatScore) / 4).round();
 }
