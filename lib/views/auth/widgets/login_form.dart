@@ -107,7 +107,16 @@ class LoginFormState extends State<LoginForm> {
             icon: Icons.g_mobiledata_rounded,
             label: 'Continue with Google',
             isDark: isDark,
-            onTap: () {},
+            onTap: () async {
+              final auth = context.read<AuthController>();
+              final router = GoRouter.of(context);
+              try {
+                await auth.signInWithGoogle();
+                if (mounted && auth.error == null) {
+                  router.go(AppRoutes.main);
+                }
+              } catch (_) {}
+            },
           ),
         ],
       ),

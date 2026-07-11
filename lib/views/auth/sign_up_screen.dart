@@ -377,28 +377,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 16),
 
                       // Social buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SocialButton(
-                              label: 'Google',
-                              icon: Icons.g_mobiledata_rounded,
-                              onTap: () {
-                                // TODO: Connect Google Sign-Up logic
-                              }, isDark: isDark,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: SocialButton(
-                              label: 'Apple',
-                              icon: Icons.apple_rounded,
-                              onTap: () {
-                                // TODO: Connect Apple Sign-Up logic
-                              }, isDark: isDark,
-                            ),
-                          ),
-                        ],
+                      SizedBox(
+                        width: double.infinity,
+                        child: SocialButton(
+                          label: 'Google',
+                          icon: Icons.g_mobiledata_rounded,
+                          onTap: () async {
+                            final auth = context.read<AuthController>();
+                            final router = GoRouter.of(context);
+                            try {
+                              await auth.signInWithGoogle();
+                              if (mounted && auth.error == null) {
+                                router.go(AppRoutes.main);
+                              }
+                            } catch (_) {}
+                          },
+                          isDark: isDark,
+                        ),
                       ),
                     ],
                   ),

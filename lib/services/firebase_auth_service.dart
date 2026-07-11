@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_model.dart';
 
 /// Firebase-backed auth service.
@@ -90,6 +91,43 @@ class FirebaseAuthService {
       await _firestore.collection('users').doc(user.uid).set(initialData);
 
       return fetchUserProfile(user);
+    } on FirebaseAuthException catch (e) {
+      throw Exception(_handleAuthException(e));
+    }
+  }
+
+  Future<UserModel> signInWithGoogle() async {
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) throw Exception('Google sign-in was cancelled.');
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _firebaseAuth.signInWithCredential(credential);
+      final firebaseUser = userCredential.user;
+      if (firebaseUser == null) throw Exception('Google sign-in failed unexpectedly.');
+
+      // Create Firestore profile if this is a first-time Google user.
+      final doc = await _firestore.collection('users').doc(firebaseUser.uid).get();
+      if (!doc.exists) {
+        await _firestore.collection('users').doc(firebaseUser.uid).set({
+          'id': firebaseUser.uid,
+          'name': firebaseUser.displayName ?? '',
+          'email': firebaseUser.email ?? '',
+          'avatarUrl': firebaseUser.photoURL ?? '',
+          'activeStreak': 0,
+          'entries': 0,
+          'bio': '',
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      return fetchUserProfile(firebaseUser);
     } on FirebaseAuthException catch (e) {
       throw Exception(_handleAuthException(e));
     }

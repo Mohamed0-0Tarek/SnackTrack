@@ -100,6 +100,21 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  Future<void> signInWithGoogle() async {
+    isLoading = true;
+    error = null;
+    _scheduleNotifyListeners();
+    try {
+      user = await _authService.signInWithGoogle();
+    } catch (e) {
+      error = e.toString();
+      rethrow;
+    } finally {
+      isLoading = false;
+      _scheduleNotifyListeners();
+    }
+  }
+
   Future<void> logout() async {
     isLoading = true;
     _scheduleNotifyListeners();
