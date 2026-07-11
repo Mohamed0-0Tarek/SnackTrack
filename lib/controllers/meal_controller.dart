@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/meal_model.dart';
 import '../services/meal_service.dart';
@@ -29,6 +30,8 @@ class MealController extends ChangeNotifier {
   List<MealModel> history = [];
   bool isLoading = false;
   bool isAnalyzing = false;
+  bool isSyncing = false;
+  int syncedCount = 0;
   String? error;
   String? analysisError;
 
@@ -56,7 +59,8 @@ class MealController extends ChangeNotifier {
   }
 
   /// Persists the currently analysed meal to Firestore.
-  /// Returns true on success.
+  /// Returns true on success. After a successful save, attempts to drain
+  /// any queued offline meals in the background.
   Future<bool> saveMeal() async {
     if (analyzedMeal == null) return false;
     isLoading = true;
@@ -65,6 +69,9 @@ class MealController extends ChangeNotifier {
     try {
       final saved = await _mealService.saveMeal(analyzedMeal!);
       analyzedMeal = saved;
+      // Opportunistic sync: after a successful save, try to push any
+      // pending offline meals to Firestore.
+      unawaited(_trySync());
       return true;
     } catch (e) {
       error = 'Could not save meal.';
@@ -194,6 +201,29 @@ class MealController extends ChangeNotifier {
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
     return '${days[dt.weekday - 1]}, ${months[dt.month - 1]} ${dt.day}';
+  }
+
+  /// Attempts to sync any pending offline meals to Firestore.
+  /// Returns the number of meals synced. Safe to call multiple times —
+  /// only one sync runs at a time.
+  Future<int> syncPendingMeals() async {
+    if (isSyncing) return 0;
+    isSyncing = true;
+    notifyListeners();
+    try {
+      syncedCount = await _mealService.syncPendingMeals();
+      return syncedCount;
+    } finally {
+      isSyncing = false;
+      notifyListeners();
+    }
+  }
+
+  /// Fire-and-forget wrapper for internal use.
+  Future<void> _trySync() async {
+    try {
+      await syncPendingMeals();
+    } catch (_) {}
   }
 
   /// Quick-favorites: real distinct recent meal names from Firestore.

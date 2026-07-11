@@ -154,6 +154,27 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    isLoading = true;
+    error = null;
+    _scheduleNotifyListeners();
+    try {
+      final email = user?.email;
+      if (email == null) throw Exception('No authenticated user.');
+      await _authService.reauthenticate(email, currentPassword);
+      await _authService.changePassword(newPassword);
+    } catch (e) {
+      error = e.toString();
+      rethrow;
+    } finally {
+      isLoading = false;
+      _scheduleNotifyListeners();
+    }
+  }
+
   bool get isEmailVerified => _authService.isEmailVerified;
 
   @override

@@ -152,6 +152,30 @@ class FirebaseAuthService {
     }
   }
 
+  Future<void> reauthenticate(String email, String password) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) throw Exception('No authenticated user.');
+    final credential = EmailAuthProvider.credential(
+      email: email,
+      password: password,
+    );
+    try {
+      await user.reauthenticateWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      throw Exception(_handleAuthException(e));
+    }
+  }
+
+  Future<void> changePassword(String newPassword) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) throw Exception('No authenticated user.');
+    try {
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw Exception(_handleAuthException(e));
+    }
+  }
+
   bool get isEmailVerified => _firebaseAuth.currentUser?.emailVerified ?? false;
 
   String _handleAuthException(FirebaseAuthException e) {

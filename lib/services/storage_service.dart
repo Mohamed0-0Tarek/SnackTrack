@@ -95,5 +95,6 @@ class StorageService {
     await _userBox.clear();
     await _settingsBox.clear();
     await _mealCacheBox.clear();
+    await _offlineQueueBox.clear();
   }
 }

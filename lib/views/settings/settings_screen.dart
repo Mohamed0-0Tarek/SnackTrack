@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:snacktrack/core/widgets/custom_button.dart';
 import 'package:snacktrack/views/settings/widgets/account_title.dart';
 import 'package:snacktrack/core/widgets/divider.dart';
@@ -8,6 +9,7 @@ import 'package:snacktrack/views/settings/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/setting_controller.dart';
+import '../../core/constants/app_routes.dart';
 
 class AppSettingsScreen extends StatelessWidget {
   const AppSettingsScreen({super.key});
@@ -404,7 +406,7 @@ class AppSettingsScreen extends StatelessWidget {
                       Icons.chevron_right_rounded,
                       color: scheme.onSurface.withAlpha(120),
                     ),
-                    onTap: () {},
+                    onTap: () => context.push(AppRoutes.changePassword),
                   ),
                   AppDivider(isDark: isDark),
                   // Log Out

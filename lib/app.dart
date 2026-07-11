@@ -22,6 +22,7 @@ import 'views/splash/splash_screen.dart';
 import 'views/auth/sign_in_screen.dart';
 import 'views/auth/sign_up_screen.dart';
 import 'views/auth/forgot_password_screen.dart';
+import 'views/settings/change_password_screen.dart';
 import 'views/onboarding/onboarding_screen.dart';
 import 'views/ai/weekly_summary_screen.dart';
 import 'views/ai/ai_coach_screen.dart';
@@ -73,10 +74,11 @@ ThemeData _accessibilityTheme(ThemeData base, SettingController settings) {
   return theme;
 }
 
-class _AppState extends State<App> {
+class _AppState extends State<App> with WidgetsBindingObserver {
   late final AuthController _authController;
   late final MealService _mealService;
   late final AiService _aiService;
+  late final MealController _mealController;
   late final SettingController _settingController;
   late final WeeklyReportService _weeklyReportService;
   late final WaterService _waterService;
@@ -88,12 +90,14 @@ class _AppState extends State<App> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     final authService = FirebaseAuthService();
     _authController = AuthController(authService);
 
     _mealService = MealService();
     _aiService = AiService();
+    _mealController = MealController(_mealService, _aiService);
     _weeklyReportService = WeeklyReportService();
     _waterService = WaterService();
     _waterController = WaterController(_waterService);
@@ -156,6 +160,7 @@ class _AppState extends State<App> {
         GoRoute(path: AppRoutes.analysis, builder: (_, __) => const MealAnalysisScreen()),
         GoRoute(path: AppRoutes.weeklySummary, builder: (_, __) => const WeeklySummaryScreen()),
         GoRoute(path: AppRoutes.settings, builder: (_, __) => const AppSettingsScreen()),
+        GoRoute(path: AppRoutes.changePassword, builder: (_, __) => const ChangePasswordScreen()),
       ],
     );
   }
@@ -166,12 +171,28 @@ class _AppState extends State<App> {
       // Transitioned into a signed-in state (or switched accounts) —
       // reload settings so the Firestore sync runs with a real uid.
       _settingController.loadSettings();
+      _syncPendingMeals();
     }
     _lastKnownUid = currentUid;
   }
 
+  /// Attempts to flush any offline-queued meals to Firestore.
+  void _syncPendingMeals() {
+    try {
+      _mealController.syncPendingMeals();
+    } catch (_) {}
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _syncPendingMeals();
+    }
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _authController.removeListener(_onAuthChanged);
     super.dispose();
   }
@@ -181,7 +202,7 @@ class _AppState extends State<App> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthController>.value(value: _authController),
-        ChangeNotifierProvider(create: (_) => MealController(_mealService, _aiService)),
+        ChangeNotifierProvider<MealController>.value(value: _mealController),
         ChangeNotifierProvider(create: (_) => DashboardController(_mealService, _aiService)),
         ChangeNotifierProvider(create: (_) => AiController(_aiService)),
         ChangeNotifierProvider(create: (_) => WeeklyReportController(_weeklyReportService, _aiService)),
