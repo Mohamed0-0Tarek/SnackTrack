@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' show User;
 import '../models/user_model.dart';
 import '../services/firebase_auth_service.dart';
+import '../services/storage_service.dart';
 
 /// Auth state for the whole app, now driven by Firebase's actual session
 /// state rather than only being set after a manual signIn() call.
@@ -121,6 +122,21 @@ class AuthController extends ChangeNotifier {
     try {
       await _authService.signOut();
       // user is cleared by the authStateChanges listener automatically.
+    } catch (e) {
+      error = e.toString();
+      rethrow;
+    } finally {
+      isLoading = false;
+      _scheduleNotifyListeners();
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    isLoading = true;
+    _scheduleNotifyListeners();
+    try {
+      await _authService.deleteAccount();
+      await StorageService.clearAll();
     } catch (e) {
       error = e.toString();
       rethrow;

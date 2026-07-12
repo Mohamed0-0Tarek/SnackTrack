@@ -51,6 +51,7 @@ class MealController extends ChangeNotifier {
       return true;
     } catch (e) {
       analysisError = 'Could not analyze meal. Try again.';
+      debugPrint('analyzeMeal error: $e');
       return false;
     } finally {
       isAnalyzing = false;

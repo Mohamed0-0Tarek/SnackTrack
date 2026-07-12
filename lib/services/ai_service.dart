@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/meal_model.dart';
 import '../models/recipe_model.dart';
@@ -48,15 +49,42 @@ class AiService {
     );
 
     if (response.statusCode != 200) {
+      debugPrint('AI request failed ($response.statusCode): ${response.body}');
       throw Exception('AI request failed (${response.statusCode}): ${response.body}');
     }
 
     final decoded = jsonDecode(response.body);
     final text = decoded['candidates']?[0]?['content']?['parts']?[0]?['text'];
     if (text == null) {
+      debugPrint('AI response missing expected content: ${response.body}');
       throw Exception('AI response missing expected content.');
     }
-    return jsonDecode(text) as Map<String, dynamic>;
+
+    var cleaned = text.trim();
+    debugPrint('Raw AI response: $cleaned');
+    if (cleaned.startsWith('```')) {
+      final firstNewline = cleaned.indexOf('\n');
+      if (firstNewline != -1) {
+        cleaned = cleaned.substring(firstNewline).trim();
+      }
+    }
+    if (cleaned.endsWith('```')) {
+      cleaned = cleaned.substring(0, cleaned.length - 3).trim();
+    }
+
+    try {
+      return jsonDecode(cleaned) as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('jsonDecode failed on cleaned text: $cleaned');
+      debugPrint('Parse error: $e');
+      final start = cleaned.indexOf('{');
+      final end = cleaned.lastIndexOf('}');
+      if (start != -1 && end > start) {
+        debugPrint('Trying fallback substring: ${cleaned.substring(start, end + 1)}');
+        return jsonDecode(cleaned.substring(start, end + 1)) as Map<String, dynamic>;
+      }
+      rethrow;
+    }
   }
 
   /// Analyzes a free-text meal description into structured nutrition data.

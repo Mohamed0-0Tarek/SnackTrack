@@ -209,6 +209,33 @@ void showPortionAdjuster(BuildContext context, MealController controller) {
 
                     const SizedBox(height: 32),
 
+                    // ── Meal Type selector ──────────────────────────────────
+                    _MealTypeSelector(
+                      currentType: meal.type,
+                      onChanged: (type) {
+                        controller.updateAnalyzedMeal(
+                          MealModel(
+                            id: meal.id,
+                            name: meal.name,
+                            type: type,
+                            calories: meal.calories,
+                            protein: meal.protein,
+                            carbs: meal.carbs,
+                            fat: meal.fat,
+                            loggedAt: meal.loggedAt,
+                            imageUrl: meal.imageUrl,
+                            source: meal.source,
+                            notes: meal.notes,
+                            analyzedBy: meal.analyzedBy,
+                            vitamins: meal.vitamins,
+                            minerals: meal.minerals,
+                          ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
+
                     // ── Log to Diary button ───────────────────────────────
                     _LogButton(
                       isLoading: controller.isLoading,
@@ -780,4 +807,85 @@ int _computeHealthScore(MealModel meal, SettingController settings) {
   final fatScore = component(meal.fat, expectedFat);
 
   return ((calScore + proteinScore + carbsScore + fatScore) / 4).round();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Meal Type Selector
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _MealTypeSelector extends StatelessWidget {
+  final String currentType;
+  final ValueChanged<String> onChanged;
+
+  const _MealTypeSelector({
+    required this.currentType,
+    required this.onChanged,
+  });
+
+  static const _types = ['breakfast', 'lunch', 'dinner', 'snack'];
+  static const _labels = {'breakfast': 'Breakfast', 'lunch': 'Lunch', 'dinner': 'Dinner', 'snack': 'Snack'};
+  static const _icons = {'breakfast': Icons.free_breakfast, 'lunch': Icons.lunch_dining, 'dinner': Icons.dinner_dining, 'snack': Icons.cookie};
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final divider = Theme.of(context).dividerColor;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('MEAL TYPE', style: tt.labelSmall?.copyWith(
+          color: scheme.onSurface.withAlpha(100),
+          letterSpacing: 1.5,
+        )),
+        const SizedBox(height: 8),
+        Row(
+          children: _types.map((type) {
+            final selected = currentType == type;
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: type == 'breakfast' ? 0 : 4,
+                  right: type == 'snack' ? 0 : 4,
+                ),
+                child: GestureDetector(
+                  onTap: () => onChanged(type),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: selected ? scheme.primary.withAlpha(25) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: selected ? scheme.primary : divider,
+                        width: selected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          _icons[type],
+                          size: 20,
+                          color: selected ? scheme.primary : scheme.onSurface.withAlpha(120),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _labels[type]!,
+                          style: tt.labelSmall?.copyWith(
+                            color: selected ? scheme.primary : scheme.onSurface.withAlpha(120),
+                            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
 }

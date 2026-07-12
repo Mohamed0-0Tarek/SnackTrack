@@ -327,30 +327,51 @@ class DataPrivacyScreen extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete Account',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text(
-          'Are you sure? This action is permanent and cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel',
-                style: TextStyle(color: scheme.onSurface)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              context.read<AuthController>().logout();
-            },
-            child: const Text('Delete',
-                style: TextStyle(
-                    color: Colors.red, fontWeight: FontWeight.bold)),
-          ),
-        ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) {
+          final auth = context.read<AuthController>();
+          return AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text('Delete Account',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            content: auth.isLoading
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 12),
+                        Text('Deleting your account…'),
+                      ],
+                    ),
+                  )
+                : const Text(
+                    'Are you sure? This action is permanent and cannot be undone.',
+                  ),
+            actions: auth.isLoading
+                ? []
+                : [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Cancel',
+                          style: TextStyle(color: scheme.onSurface)),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        try {
+                          await auth.deleteAccount();
+                          if (ctx.mounted) Navigator.pop(ctx);
+                        } catch (_) {}
+                      },
+                      child: const Text('Delete',
+                          style: TextStyle(
+                              color: Colors.red, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+          );
+        },
       ),
     );
   }

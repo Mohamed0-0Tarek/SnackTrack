@@ -137,6 +137,52 @@ class FirebaseAuthService {
     await _firebaseAuth.signOut();
   }
 
+  Future<void> deleteAccount() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) throw Exception('No authenticated user.');
+
+    final uid = user.uid;
+
+    // Delete all subcollections under users/{uid}
+    const subcollections = ['meals', 'weights', 'water', 'conversations', 'recipes', 'notifications'];
+    for (final col in subcollections) {
+      if (col == 'conversations') {
+        final convDocs = await _firestore
+            .collection('users').doc(uid).collection('conversations').get();
+        for (final conv in convDocs.docs) {
+          final messages = await _firestore
+              .collection('users').doc(uid)
+              .collection('conversations').doc(conv.id)
+              .collection('messages').get();
+          for (final msg in messages.docs) {
+            await msg.reference.delete();
+          }
+          await conv.reference.delete();
+        }
+      } else {
+        final docs = await _firestore
+            .collection('users').doc(uid).collection(col).get();
+        for (final doc in docs.docs) {
+          await doc.reference.delete();
+        }
+      }
+    }
+
+    // Delete the settings document
+    final settingsDoc = await _firestore
+        .collection('users').doc(uid)
+        .collection('settings').doc('preferences').get();
+    if (settingsDoc.exists) {
+      await settingsDoc.reference.delete();
+    }
+
+    // Delete the root user document
+    await _firestore.collection('users').doc(uid).delete();
+
+    // Delete the Firebase Auth account
+    await user.delete();
+  }
+
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _firebaseAuth.sendPasswordResetEmail(email: email);
