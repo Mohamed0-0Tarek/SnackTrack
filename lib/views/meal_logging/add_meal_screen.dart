@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/meal_controller.dart';
 import '../../core/constants/app_routes.dart';
+import '../../services/voice_input_service.dart';
 
 /// ## What changed in this file
 /// 1. After a successful `analyzeMeal()` call, this screen now actually
@@ -210,9 +211,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
         ).showSnackBar(const SnackBar(content: Text('Barcode — coming soon')));
         break;
       case MealInputMethod.voice:
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Voice — coming soon')));
+        _startVoiceInput(context, controller);
         break;
     }
   }
@@ -326,6 +325,183 @@ class _AddMealScreenState extends State<AddMealScreen> {
         ),
       );
     }
+  }
+
+  // ── Voice Input ─────────────────────────────────────────────────────────
+
+  void _startVoiceInput(BuildContext screenContext, MealController controller) {
+    showModalBottomSheet(
+      context: screenContext,
+      isScrollControlled: true,
+      builder: (ctx) => _VoiceInputSheet(
+        onAnalyze: (transcript) async {
+          Navigator.pop(ctx);
+          final success = await controller.analyzeMeal(transcript);
+          if (!screenContext.mounted) return;
+          if (success) {
+            screenContext.push(AppRoutes.analysis);
+          } else {
+            ScaffoldMessenger.of(screenContext).showSnackBar(
+              SnackBar(content: Text(controller.analysisError ?? 'Could not analyze meal.')),
+            );
+          }
+        },
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Voice Input Widget
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _VoiceInputSheet extends StatefulWidget {
+  final void Function(String transcript) onAnalyze;
+  const _VoiceInputSheet({required this.onAnalyze});
+
+  @override
+  State<_VoiceInputSheet> createState() => _VoiceInputSheetState();
+}
+
+class _VoiceInputSheetState extends State<_VoiceInputSheet>
+    with SingleTickerProviderStateMixin {
+  final VoiceInputService _service = VoiceInputService();
+
+  bool _ready = false;
+  String _transcript = '';
+  String? _error;
+  late AnimationController _animCtrl;
+  late Animation<double> _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _pulse = Tween<double>(begin: 1.0, end: 1.15).animate(
+      CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut),
+    );
+    _initAndListen();
+  }
+
+  Future<void> _initAndListen() async {
+    final available = await _service.initialize();
+    if (!available) {
+      setState(() => _error = 'Speech recognition not available.');
+      return;
+    }
+    setState(() => _ready = true);
+    _animCtrl.repeat(reverse: true);
+    await _service.startListening('en_US');
+
+    _service.transcriptStream.listen(
+      (transcript) {
+        if (mounted) setState(() => _transcript = transcript);
+      },
+      onError: (e) {
+        if (mounted) setState(() => _error = 'Error: $e');
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _service.dispose();
+    _animCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Pulsing mic icon
+          ScaleTransition(
+            scale: _pulse,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: _ready ? Colors.red.withAlpha(30) : theme.dividerColor,
+                borderRadius: BorderRadius.circular(40),
+              ),
+              child: Icon(
+                _ready ? Icons.mic : Icons.mic_off,
+                color: _ready ? Colors.red : theme.hintColor,
+                size: 40,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Status / error
+          if (_error != null)
+            Text(_error!, style: tt.bodySmall?.copyWith(color: Colors.red))
+          else if (!_ready)
+            Text('Initialising…', style: tt.bodySmall)
+          else
+            Text(
+              _transcript.isEmpty ? 'Listening…' : 'Heard:',
+              style: tt.bodySmall,
+            ),
+
+          // Transcript
+          if (_transcript.isNotEmpty)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.dividerColor),
+              ),
+              child: Text(
+                _transcript,
+                style: tt.bodyMedium,
+              ),
+            ),
+
+          const SizedBox(height: 8),
+
+          // Buttons
+          Row(
+            children: [
+              if (_ready)
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      final nav = Navigator.of(context);
+                      await _service.stopListening();
+                      nav.pop();
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                ),
+              if (_ready && _transcript.isNotEmpty) ...[
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      widget.onAnalyze(_transcript);
+                    },
+                    child: const Text('Analyze'),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
