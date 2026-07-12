@@ -18,4 +18,5 @@ class AppRoutes {
   static const String forgotPassword = '/forgot-password';
   static const String changePassword = '/change-password';
   static const String weightTracking = '/weight-tracking';
+  static const String mealPlan = '/meal-plan';
 }

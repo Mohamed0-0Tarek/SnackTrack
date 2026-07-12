@@ -15,6 +15,7 @@ import 'controllers/history_controller.dart';
 import 'controllers/setting_controller.dart';
 import 'controllers/water_controller.dart';
 import 'controllers/weight_controller.dart';
+import 'controllers/meal_plan_controller.dart';
 import 'controllers/recipe_controller.dart';
 import 'services/firebase_auth_service.dart';
 import 'services/meal_service.dart';
@@ -22,12 +23,14 @@ import 'services/ai_service.dart';
 import 'services/water_service.dart';
 import 'services/weight_service.dart';
 import 'services/recipe_service.dart';
+import 'services/meal_plan_service.dart';
 import 'views/splash/splash_screen.dart';
 import 'views/auth/sign_in_screen.dart';
 import 'views/auth/sign_up_screen.dart';
 import 'views/auth/forgot_password_screen.dart';
 import 'views/settings/change_password_screen.dart';
 import 'views/weight/weight_tracking_screen.dart';
+import 'views/meal_plan/meal_plan_screen.dart';
 import 'views/recipes/recipe_list_screen.dart';
 import 'views/recipes/recipe_form_screen.dart';
 import 'views/recipes/recipe_detail_screen.dart';
@@ -95,6 +98,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   late final WeightController _weightController;
   late final RecipeService _recipeService;
   late final RecipeController _recipeController;
+  late final MealPlanService _mealPlanService;
+  late final MealPlanController _mealPlanController;
   late final GoRouter _router;
 
   String? _lastKnownUid;
@@ -117,6 +122,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     _weightController = WeightController(_weightService);
     _recipeService = RecipeService();
     _recipeController = RecipeController(_recipeService, _aiService);
+    _mealPlanService = MealPlanService();
+    _mealPlanController = MealPlanController(_mealPlanService, _aiService);
     _settingController = SettingController();
 
     // SettingController's constructor calls loadSettings() once, but at
@@ -178,6 +185,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         GoRoute(path: AppRoutes.settings, builder: (_, __) => const AppSettingsScreen()),
         GoRoute(path: AppRoutes.changePassword, builder: (_, __) => const ChangePasswordScreen()),
         GoRoute(path: AppRoutes.weightTracking, builder: (_, __) => const WeightTrackingScreen()),
+        GoRoute(path: AppRoutes.mealPlan, builder: (_, __) => const MealPlanScreen()),
         GoRoute(path: AppRoutes.recipeList, builder: (_, __) => const RecipeListScreen()),
         GoRoute(path: AppRoutes.recipeCreate, builder: (_, context) {
           final recipe = context.extra as dynamic;
@@ -238,6 +246,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         ChangeNotifierProvider<WaterController>.value(value: _waterController),
         ChangeNotifierProvider<WeightController>.value(value: _weightController),
         ChangeNotifierProvider<RecipeController>.value(value: _recipeController),
+        ChangeNotifierProvider<MealPlanController>.value(value: _mealPlanController),
       ],
       child: Consumer<SettingController>(
         builder: (context, settings, _) => MaterialApp.router(

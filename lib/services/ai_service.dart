@@ -190,6 +190,41 @@ Recipe: "$description"
     return await _callModel(prompt);
   }
 
+  /// Generates a 7-day meal plan based on user goals and preferences.
+  /// Returns the raw JSON matching the MealPlanModel shape.
+  Future<Map<String, dynamic>> generateMealPlan({
+    required int goalCalories,
+    required double goalProtein,
+    required double goalCarbs,
+    required double goalFat,
+    String? preferences,
+  }) async {
+    final prefs = preferences != null && preferences.isNotEmpty
+        ? " Dietary preferences: $preferences."
+        : '';
+    final prompt = '''
+You are a meal planning nutritionist. Generate a 7-day meal plan (Monday to Sunday)
+that fits these daily targets: $goalCalories kcal, ${goalProtein}g protein, ${goalCarbs}g carbs, ${goalFat}g fat.$prefs
+
+Respond with ONLY a JSON object (no markdown) with this exact shape:
+{
+  "name": string,
+  "days": [
+    {
+      "dayOfWeek": number (1=Monday … 7=Sunday),
+      "meals": [
+        {"mealType": "breakfast"|"lunch"|"dinner"|"snack", "name": string, "calories": number, "protein": number, "carbs": number, "fat": number}
+      ]
+    }
+  ]
+}
+
+Each day should have breakfast, lunch, dinner, and optionally snacks.
+Distribute macros across meals so they roughly sum to the daily targets.
+''';
+    return await _callModel(prompt);
+  }
+
   /// One-tip dietary suggestion based on today's logged meals — used by
   /// the dashboard's Smart Analysis Card.
   Future<String> getDietaryTip(List<MealModel> todaysMeals) async {
