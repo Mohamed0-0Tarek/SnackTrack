@@ -167,12 +167,27 @@ Meal description: "$description"
     final fullPrompt = '''
 You are a recipe generator. Respond with ONLY a JSON object (no markdown)
 with this exact shape:
-{"name": string, "ingredients": [string], "steps": [string], "calories": number, "protein": number, "carbs": number, "fat": number}
+{"name": string, "ingredients": [string], "steps": [string], "calories": number, "protein": number, "carbs": number, "fat": number, "servings": number, "prepTime": number}
 
 Request: "$prompt"
 ''';
     final json = await _callModel(fullPrompt);
     return RecipeModel.fromJson(json);
+  }
+
+  /// Estimates total macros for a custom recipe based on a description or
+  /// ingredient list. Returns the same shape as generateRecipe but without
+  /// steps (the user already knows how to make it).
+  Future<Map<String, dynamic>> analyzeRecipeMacros(String description) async {
+    final prompt = '''
+You are a nutrition analyst. Given a recipe description or ingredient list,
+respond with ONLY a JSON object (no markdown) with this exact shape:
+{"calories": number, "protein": number, "carbs": number, "fat": number, "servings": number}
+Estimate total macros for the entire recipe, not per serving.
+
+Recipe: "$description"
+''';
+    return await _callModel(prompt);
   }
 
   /// One-tip dietary suggestion based on today's logged meals — used by
