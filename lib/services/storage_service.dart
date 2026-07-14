@@ -24,14 +24,18 @@ class StorageService {
   static const String _settingsBoxName = 'settings_box';
   static const String _mealCacheBoxName = 'meal_cache';
   static const String _offlineQueueBoxName = 'offline_queue';
+  static const String _reminderBoxName = 'meal_reminders';
 
   static const String _userKey = 'current_user';
   static const String _settingsKey = 'current_settings';
+  static const String _reminderTimesKey = 'times';
+  static const String _reminderEnabledKey = 'enabled';
 
   static late Box<UserModel> _userBox;
   static late Box<SettingsModel> _settingsBox;
   static late Box _mealCacheBox;
   static late Box _offlineQueueBox;
+  static late Box _reminderBox;
 
   /// Call once in main.dart, AFTER Hive.initFlutter() and AFTER
   /// registering adapters:
@@ -44,6 +48,7 @@ class StorageService {
     _settingsBox = await Hive.openBox<SettingsModel>(_settingsBoxName);
     _mealCacheBox = await Hive.openBox(_mealCacheBoxName);
     _offlineQueueBox = await Hive.openBox(_offlineQueueBoxName);
+    _reminderBox = await Hive.openBox(_reminderBoxName);
   }
 
   // ── User ─────────────────────────────────────────────────────────────
@@ -86,6 +91,23 @@ class StorageService {
     await _offlineQueueBox.delete(key);
   }
 
+  // ── Meal reminders ──────────────────────────────────────────────────
+
+  static Future<void> saveReminderTimes(Map<String, String> times) =>
+      _reminderBox.put(_reminderTimesKey, times);
+
+  static Map<String, String>? getReminderTimes() {
+    final raw = _reminderBox.get(_reminderTimesKey);
+    if (raw == null) return null;
+    return Map<String, String>.from(raw as Map);
+  }
+
+  static Future<void> saveReminderEnabled(bool enabled) =>
+      _reminderBox.put(_reminderEnabledKey, enabled);
+
+  static bool getReminderEnabled() =>
+      _reminderBox.get(_reminderEnabledKey, defaultValue: true) as bool;
+
   // ── Full wipe (used on logout) ──────────────────────────────────────
 
   /// Clears everything cached locally. Call this from
@@ -96,5 +118,6 @@ class StorageService {
     await _settingsBox.clear();
     await _mealCacheBox.clear();
     await _offlineQueueBox.clear();
+    await _reminderBox.clear();
   }
 }

@@ -389,13 +389,16 @@ class _VoiceInputSheetState extends State<_VoiceInputSheet>
   Future<void> _initAndListen() async {
     final available = await _service.initialize();
     if (!available) {
-      setState(() => _error = 'Speech recognition not available.');
+      if (mounted) setState(() => _error = 'Speech recognition not available on this device.');
       return;
     }
+    if (!mounted) return;
     setState(() => _ready = true);
     _animCtrl.repeat(reverse: true);
-    await _service.startListening('en_US');
 
+    // Subscribe BEFORE calling startListening so we never miss the
+    // first partial result, which can arrive almost immediately on
+    // fast devices before an await-then-listen chain completes.
     _service.transcriptStream.listen(
       (transcript) {
         if (mounted) setState(() => _transcript = transcript);
@@ -404,6 +407,8 @@ class _VoiceInputSheetState extends State<_VoiceInputSheet>
         if (mounted) setState(() => _error = 'Error: $e');
       },
     );
+
+    await _service.startListening('en_US');
   }
 
   @override

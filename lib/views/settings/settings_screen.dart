@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:snacktrack/core/widgets/custom_button.dart';
+import 'package:snacktrack/services/meal_reminder_service.dart';
+import 'package:snacktrack/services/storage_service.dart';
 import 'package:snacktrack/views/settings/widgets/account_title.dart';
 import 'package:snacktrack/core/widgets/divider.dart';
 import 'package:snacktrack/views/settings/widgets/section_card_wrapper.dart';
@@ -419,6 +421,16 @@ class AppSettingsScreen extends StatelessWidget {
                     isDark: isDark,
                     onTap: () => context.push(AppRoutes.mealPlan),
                   ),
+                  const SizedBox(height: 4),
+                  AppDivider(isDark: isDark),
+                  _GoalRow(
+                    icon: Icons.schedule_rounded,
+                    iconColor: const Color(0xFF6A3DE8),
+                    label: 'Meal Reminders',
+                    value: '',
+                    isDark: isDark,
+                    onTap: () => _showMealRemindersSheet(context, isDark, scheme, tt),
+                  ),
                 ],
               ),
             ),
@@ -567,6 +579,193 @@ class _GoalRow extends StatelessWidget {
     );
   }
 }
+
+// ─── Meal Reminders Sheet ───────────────────────────────────────────────────
+
+const Map<String, String> _defaultReminderTimes = {
+  'breakfast': '08:00',
+  'lunch': '12:30',
+  'dinner': '18:00',
+  'snack': '15:30',
+};
+
+Future<void> _showMealRemindersSheet(
+  BuildContext context,
+  bool isDark,
+  ColorScheme scheme,
+  TextTheme tt,
+) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final reminderService = MealReminderService();
+  Map<String, String> times =
+      StorageService.getReminderTimes() ?? Map.from(_defaultReminderTimes);
+  bool enabled = StorageService.getReminderEnabled();
+  bool changed = false;
+
+  await showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: isDark ? const Color(0xFF0F1629) : const Color(0xFFF4F4F4),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (ctx) {
+      return StatefulBuilder(
+        builder: (ctx, setModalState) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Meal Reminders',
+                        style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    Switch(
+                      value: enabled,
+                      onChanged: (v) {
+                        setModalState(() => enabled = v);
+                        changed = true;
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  enabled
+                      ? 'Notifications will remind you to log your meals.'
+                      : 'Meal reminders are off.',
+                  style: tt.bodySmall?.copyWith(color: scheme.onSurface.withAlpha(120)),
+                ),
+                const SizedBox(height: 20),
+                if (enabled)
+                  ...mealTypes.entries.map((entry) {
+                    final type = entry.key;
+                    final label = entry.value;
+                    final time = times[type] ?? _defaultReminderTimes[type]!;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 28,
+                                child: Icon(mealIcons[type],
+                                    size: 20, color: scheme.primary),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(label, style: tt.bodyMedium),
+                            ],
+                          ),
+                          GestureDetector(
+                            onTap: () async {
+                              final picked = await showTimePicker(
+                                context: ctx,
+                                initialTime: TimeOfDay(
+                                  hour: int.parse(time.split(':')[0]),
+                                  minute: int.parse(time.split(':')[1]),
+                                ),
+                              );
+                              if (picked != null) {
+                                final formatted =
+                                    '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                                setModalState(() {
+                                  times[type] = formatted;
+                                });
+                                changed = true;
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: scheme.primary.withAlpha(20),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Theme.of(ctx).dividerColor),
+                              ),
+                              child: Text(
+                                time,
+                                style: tt.labelLarge?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: scheme.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                const SizedBox(height: 8),
+                if (enabled)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (changed) {
+                          StorageService.saveReminderTimes(times);
+                          StorageService.saveReminderEnabled(enabled);
+                          reminderService.scheduleMealReminders(times);
+                        }
+                        Navigator.pop(ctx);
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(changed
+                                ? 'Meal reminders updated.'
+                                : 'Meal reminders are active.'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      child: const Text('Save'),
+                    ),
+                  ),
+                if (!enabled)
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        if (changed) {
+                          StorageService.saveReminderTimes(times);
+                          StorageService.saveReminderEnabled(false);
+                          reminderService.cancelAll();
+                        }
+                        Navigator.pop(ctx);
+                        messenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('Meal reminders turned off.'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      child: const Text('Done'),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+const Map<String, IconData> mealIcons = {
+  'breakfast': Icons.free_breakfast,
+  'lunch': Icons.lunch_dining,
+  'dinner': Icons.dinner_dining,
+  'snack': Icons.cookie,
+};
+
+const Map<String, String> mealTypes = {
+  'breakfast': 'Breakfast',
+  'lunch': 'Lunch',
+  'dinner': 'Dinner',
+  'snack': 'Snack',
+};
 
 // ─── Goal Edit Dialog ────────────────────────────────────────────────────────
 
