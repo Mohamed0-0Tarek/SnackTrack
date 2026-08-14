@@ -3,6 +3,18 @@ import '../models/meal_model.dart';
 import '../models/daily_summary_model.dart';
 import '../services/meal_service.dart';
 
+/// ## What changed vs the old HistoryController
+/// `loadHistory()` previously always called `_dummyData()` — the real
+/// path (`MealService.getMealHistory()` + `_groupByDay()`) was already
+/// written here but commented out, waiting on MealService to actually
+/// be backed by Firestore. That's now done (see MealService rewrite),
+/// so this just flips the active path.
+///
+/// `_dummyData()` and `_groupByDay()` are both kept: `_groupByDay` is
+/// now the live path, `_dummyData` is left in place only as a reference
+/// for what the shape used to look like — safe to delete once you're
+/// confident the real path is stable, but not removed here to keep
+/// this change minimal and easy to review.
 enum HistoryFilter { today, week, month }
 
 class HistoryController extends ChangeNotifier {
@@ -14,19 +26,19 @@ class HistoryController extends ChangeNotifier {
   bool isLoading = false;
   String? error;
   String searchQuery = '';
+  int _goalCalories = 2000;
+
+  void setGoalCalories(int value) {
+    _goalCalories = value;
+  }
 
   Future<void> loadHistory() async {
     isLoading = true;
     error = null;
     notifyListeners();
     try {
-      // ── Dummy data للـ UI ─────────────────────────────────────────────
-      // لما الـ backend يكون جاهز، شيلي السطر ده:
-      // summaries = _dummyData();
-      // وفكي التعليق عن السطرين دول:
-      // final meals = await _mealService.getMealHistory();
-      // summaries = _groupByDay(meals);
-      summaries = _dummyData();
+      final meals = await _mealService.getMealHistory();
+      summaries = _groupByDay(meals);
     } catch (e) {
       error = 'Could not load history.';
     } finally {
@@ -71,67 +83,9 @@ class HistoryController extends ChangeNotifier {
     }).toList();
   }
 
-  List<DailySummaryModel> _dummyData() {
-    final now = DateTime.now();
-    final yesterday = now.subtract(const Duration(days: 1));
-
-    return [
-      DailySummaryModel(
-        date: DateTime(now.year, now.month, now.day),
-        totalCalories: 1420,
-        calorieGoal: 2000,
-        totalProtein: 53,
-        totalCarbs: 57,
-        totalFat: 30,
-        meals: [
-          MealModel(
-            id: '1',
-            name: 'Grilled Salmon & Avocado',
-            calories: 540,
-            protein: 38,
-            carbs: 12,
-            fat: 22,
-            loggedAt: DateTime(now.year, now.month, now.day, 12, 30),
-          ),
-          MealModel(
-            id: '2',
-            name: 'Berry Blast Smoothie Bowl',
-            calories: 320,
-            protein: 15,
-            carbs: 45,
-            fat: 8,
-            loggedAt: DateTime(now.year, now.month, now.day, 8, 15),
-          ),
-        ],
-      ),
-      DailySummaryModel(
-        date: DateTime(yesterday.year, yesterday.month, yesterday.day),
-        totalCalories: 2105,
-        calorieGoal: 2000,
-        totalProtein: 32,
-        totalCarbs: 72,
-        totalFat: 18,
-        meals: [
-          MealModel(
-            id: '3',
-            name: 'Spicy Ahi Poke Bowl',
-            calories: 680,
-            protein: 32,
-            carbs: 72,
-            fat: 18,
-            loggedAt: DateTime(
-              yesterday.year,
-              yesterday.month,
-              yesterday.day,
-              19,
-              30,
-            ),
-          ),
-        ],
-      ),
-    ];
-  }
-
+  /// Groups a flat list of meals (newest-first, as returned by
+  /// MealService.getMealHistory) into one DailySummaryModel per day,
+  /// sorted newest-day-first. Goal calories come from [setGoalCalories].
   List<DailySummaryModel> _groupByDay(List<MealModel> meals) {
     final Map<String, List<MealModel>> map = {};
     for (final meal in meals) {
@@ -149,7 +103,7 @@ class HistoryController extends ChangeNotifier {
           int.parse(parts[2]),
         ),
         totalCalories: dayMeals.fold(0, (sum, m) => sum + m.calories),
-        calorieGoal: 2000,
+        calorieGoal: _goalCalories,
         totalProtein: dayMeals.fold(0.0, (sum, m) => sum + m.protein),
         totalCarbs: dayMeals.fold(0.0, (sum, m) => sum + m.carbs),
         totalFat: dayMeals.fold(0.0, (sum, m) => sum + m.fat),

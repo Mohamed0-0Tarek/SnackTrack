@@ -2,41 +2,26 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'shared_card.dart';
 
+/// Caloric trend chart — now driven by real [dailyCalories] data from
+/// WeeklyReportController instead of a hardcoded static list.
 class CaloricFluxCard extends StatelessWidget {
-  const CaloricFluxCard({super.key});
+  final List<int> dailyCalories;
+  final List<String> days;
+  final int goalCalories;
 
-  static const List<double> intakeData = [
-    2200,
-    2450,
-    2100,
-    2600,
-    2350,
-    2500,
-    2450,
-  ];
-  static const List<double> weightData = [
-    175.0,
-    174.8,
-    175.2,
-    174.6,
-    174.4,
-    174.3,
-    174.2,
-  ];
-  static const List<String> days = [
-    'MON',
-    'TUE',
-    'WED',
-    'THU',
-    'FRI',
-    'SAT',
-    'SUN',
-  ];
+  const CaloricFluxCard({
+    super.key,
+    required this.dailyCalories,
+    required this.days,
+    required this.goalCalories,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+
+    final data = dailyCalories.map((c) => c.toDouble()).toList();
 
     return ReportCard(
       child: Column(
@@ -48,23 +33,16 @@ class CaloricFluxCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Caloric Flux vs. Weight', style: tt.headlineMedium),
+                    Text('Caloric Flux', style: tt.headlineMedium),
                     const SizedBox(height: 2),
                     Text(
-                      'Correlation of intake against daily weigh-ins',
+                      '7-day intake vs. goal ($goalCalories kcal)',
                       style: tt.bodySmall,
                     ),
                   ],
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _LegendDot(color: scheme.primary, label: 'INTAKE'),
-                  const SizedBox(height: 4),
-                  _LegendDot(color: scheme.secondary, label: 'WEIGHT'),
-                ],
-              ),
+              _LegendDot(color: scheme.primary, label: 'INTAKE'),
             ],
           ),
           const SizedBox(height: 16),
@@ -72,12 +50,11 @@ class CaloricFluxCard extends StatelessWidget {
             height: 120,
             child: CustomPaint(
               size: const Size(double.infinity, 120),
-              painter: _DualLinePainter(
-                intakeData: intakeData,
-                weightData: weightData,
-                primaryColor: scheme.primary,
-                secondaryColor: scheme.secondary,
-                surfaceColor: Theme.of(context).cardColor,
+              painter: _BarPainter(
+                data: data,
+                goalCalories: goalCalories.toDouble(),
+                barColor: scheme.primary,
+                goalColor: scheme.secondary,
               ),
             ),
           ),
@@ -103,8 +80,7 @@ class _LegendDot extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 8,
-          height: 8,
+          width: 8, height: 8,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
@@ -114,130 +90,52 @@ class _LegendDot extends StatelessWidget {
   }
 }
 
-class _DualLinePainter extends CustomPainter {
-  final List<double> intakeData;
-  final List<double> weightData;
-  final Color primaryColor;
-  final Color secondaryColor;
-  final Color surfaceColor;
+class _BarPainter extends CustomPainter {
+  final List<double> data;
+  final double goalCalories;
+  final Color barColor;
+  final Color goalColor;
 
-  const _DualLinePainter({
-    required this.intakeData,
-    required this.weightData,
-    required this.primaryColor,
-    required this.secondaryColor,
-    required this.surfaceColor,
+  const _BarPainter({
+    required this.data,
+    required this.goalCalories,
+    required this.barColor,
+    required this.goalColor,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    _drawLine(canvas, size, intakeData, primaryColor, dashed: false);
-    _drawLine(canvas, size, weightData, secondaryColor, dashed: true);
-  }
+    if (data.isEmpty) return;
 
-  void _drawLine(
-    Canvas canvas,
-    Size size,
-    List<double> data,
-    Color color, {
-    bool dashed = false,
-  }) {
-    final minVal = data.reduce(min);
-    final maxVal = data.reduce(max);
-    final range = maxVal - minVal == 0 ? 1 : maxVal - minVal;
+    final maxVal = max(data.reduce(max), goalCalories) * 1.15;
+    final barWidth = size.width / (data.length * 2);
 
-    Offset getOffset(int i) {
-      final x = i * size.width / (data.length - 1);
-      final y =
-          size.height -
-          ((data[i] - minVal) / range) * (size.height * 0.8) -
-          size.height * 0.1;
-      return Offset(x, y);
-    }
-
-    // Gradient fill (solid lines only)
-    if (!dashed) {
-      final fillPath = Path()..moveTo(0, size.height);
-      for (int i = 0; i < data.length; i++) {
-        final o = getOffset(i);
-        if (i == 0) {
-          fillPath.lineTo(o.dx, o.dy);
-        } else {
-          final prev = getOffset(i - 1);
-          final cp1 = Offset((prev.dx + o.dx) / 2, prev.dy);
-          final cp2 = Offset((prev.dx + o.dx) / 2, o.dy);
-          fillPath.cubicTo(cp1.dx, cp1.dy, cp2.dx, cp2.dy, o.dx, o.dy);
-        }
-      }
-      fillPath
-        ..lineTo(size.width, size.height)
-        ..close();
-
-      canvas.drawPath(
-        fillPath,
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [color.withAlpha(70), color.withAlpha(0)],
-          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
+    for (int i = 0; i < data.length; i++) {
+      final x = i * (size.width / data.length) + barWidth / 2;
+      final barHeight = (data[i] / maxVal) * size.height * 0.85;
+      final rect = Rect.fromLTWH(
+        x, size.height - barHeight, barWidth, barHeight,
+      );
+      final rRect = RRect.fromRectAndRadius(rect, const Radius.circular(4));
+      canvas.drawRRect(
+        rRect,
+        Paint()..color = data[i] > 0 ? barColor : barColor.withAlpha(40),
       );
     }
 
-    // Build smooth path
-    final linePath = Path();
-    for (int i = 0; i < data.length; i++) {
-      final o = getOffset(i);
-      if (i == 0) {
-        linePath.moveTo(o.dx, o.dy);
-      } else {
-        final prev = getOffset(i - 1);
-        final cp1 = Offset((prev.dx + o.dx) / 2, prev.dy);
-        final cp2 = Offset((prev.dx + o.dx) / 2, o.dy);
-        linePath.cubicTo(cp1.dx, cp1.dy, cp2.dx, cp2.dy, o.dx, o.dy);
-      }
-    }
-
-    final linePaint = Paint()
-      ..color = color
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    if (dashed) {
-      _drawDashedPath(canvas, linePath, linePaint);
-    } else {
-      canvas.drawPath(linePath, linePaint);
-    }
-
-    // Dots
-    for (int i = 0; i < data.length; i++) {
-      canvas.drawCircle(getOffset(i), 3.5, Paint()..color = color);
-      canvas.drawCircle(
-        getOffset(i),
-        3.5,
-        Paint()
-          ..color = surfaceColor
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5,
-      );
-    }
-  }
-
-  void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
-    const dashWidth = 6.0;
-    const dashSpace = 4.0;
-    for (final metric in path.computeMetrics()) {
-      double distance = 0;
-      while (distance < metric.length) {
-        final next = (distance + dashWidth).clamp(0.0, metric.length);
-        canvas.drawPath(metric.extractPath(distance, next), paint);
-        distance += dashWidth + dashSpace;
-      }
-    }
+    // Goal line
+    final goalY = size.height - (goalCalories / maxVal) * size.height * 0.85;
+    canvas.drawLine(
+      Offset(0, goalY),
+      Offset(size.width, goalY),
+      Paint()
+        ..color = goalColor
+        ..strokeWidth = 1.5
+        ..strokeCap = StrokeCap.round,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _DualLinePainter old) =>
-      old.primaryColor != primaryColor || old.secondaryColor != secondaryColor;
+  bool shouldRepaint(covariant _BarPainter old) =>
+      old.data != data || old.goalCalories != goalCalories;
 }

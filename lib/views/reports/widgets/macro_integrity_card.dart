@@ -2,13 +2,34 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'shared_card.dart';
 
+/// Macro donut chart — now driven by real [macroPercentages] from
+/// WeeklyReportController instead of hardcoded 40/33/19 splits.
 class MacroIntegrityCard extends StatelessWidget {
-  const MacroIntegrityCard({super.key});
+  /// [proteinPct, carbsPct, fatPct] each in 0.0–1.0 range.
+  final List<double> macroPercentages;
+  final String totalProtein;
+  final String totalCarbs;
+  final String totalFat;
+
+  const MacroIntegrityCard({
+    super.key,
+    required this.macroPercentages,
+    required this.totalProtein,
+    required this.totalCarbs,
+    required this.totalFat,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+
+    final proteinPct = macroPercentages.isNotEmpty ? macroPercentages[0] : 0.33;
+    final carbsPct = macroPercentages.length > 1 ? macroPercentages[1] : 0.33;
+    final fatPct = macroPercentages.length > 2 ? macroPercentages[2] : 0.34;
+
+    final adherencePct =
+        ((proteinPct + carbsPct + fatPct) * 100).clamp(0, 100).round();
 
     return ReportCard(
       child: Column(
@@ -22,6 +43,9 @@ class MacroIntegrityCard extends StatelessWidget {
               height: 140,
               child: CustomPaint(
                 painter: _DonutPainter(
+                  proteinPct: proteinPct,
+                  carbsPct: carbsPct,
+                  fatPct: fatPct,
                   primaryColor: scheme.primary,
                   secondaryColor: scheme.secondary,
                   tertiaryColor: scheme.tertiary,
@@ -31,12 +55,12 @@ class MacroIntegrityCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        '92%',
+                        '$adherencePct%',
                         style: tt.displayMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      Text('ADHERENCE', style: tt.labelSmall),
+                      Text('LOGGED', style: tt.labelSmall),
                     ],
                   ),
                 ),
@@ -44,11 +68,18 @@ class MacroIntegrityCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          _MacroRow(label: 'PROTEIN', value: '185g', color: scheme.primary),
+          _MacroRow(
+              label: 'PROTEIN',
+              value: totalProtein,
+              color: scheme.primary),
           const SizedBox(height: 10),
-          _MacroRow(label: 'CARBS', value: '210g', color: scheme.secondary),
+          _MacroRow(
+              label: 'CARBS',
+              value: totalCarbs,
+              color: scheme.secondary),
           const SizedBox(height: 10),
-          _MacroRow(label: 'FATS', value: '65g', color: scheme.tertiary),
+          _MacroRow(
+              label: 'FATS', value: totalFat, color: scheme.tertiary),
         ],
       ),
     );
@@ -59,11 +90,8 @@ class _MacroRow extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
-  const _MacroRow({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
+  const _MacroRow(
+      {required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -72,25 +100,28 @@ class _MacroRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: tt.bodyMedium),
-        Text(
-          value,
-          style: tt.labelLarge?.copyWith(
-            color: color,
-            fontWeight: FontWeight.w700,
-            fontSize: 15,
-          ),
-        ),
+        Text(value,
+            style: tt.labelLarge?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w700,
+                fontSize: 15)),
       ],
     );
   }
 }
 
 class _DonutPainter extends CustomPainter {
+  final double proteinPct;
+  final double carbsPct;
+  final double fatPct;
   final Color primaryColor;
   final Color secondaryColor;
   final Color tertiaryColor;
 
   const _DonutPainter({
+    required this.proteinPct,
+    required this.carbsPct,
+    required this.fatPct,
     required this.primaryColor,
     required this.secondaryColor,
     required this.tertiaryColor,
@@ -104,18 +135,19 @@ class _DonutPainter extends CustomPainter {
     const gapAngle = 0.08;
 
     final segments = [
-      (0.40, primaryColor),
-      (0.33, secondaryColor),
-      (0.19, tertiaryColor),
+      (proteinPct, primaryColor),
+      (carbsPct, secondaryColor),
+      (fatPct, tertiaryColor),
     ];
 
     double startAngle = -pi / 2;
     for (final seg in segments) {
+      if (seg.$1 <= 0) continue;
       final sweepAngle = seg.$1 * 2 * pi - gapAngle;
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
         startAngle,
-        sweepAngle,
+        sweepAngle.clamp(0.01, 2 * pi),
         false,
         Paint()
           ..color = seg.$2
@@ -125,23 +157,11 @@ class _DonutPainter extends CustomPainter {
       );
       startAngle += sweepAngle + gapAngle;
     }
-
-    // Remaining track
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      startAngle,
-      (1 - 0.92) * 2 * pi,
-      false,
-      Paint()
-        ..color = primaryColor.withAlpha(40)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth,
-    );
   }
 
   @override
   bool shouldRepaint(covariant _DonutPainter old) =>
-      old.primaryColor != primaryColor ||
-      old.secondaryColor != secondaryColor ||
-      old.tertiaryColor != tertiaryColor;
+      old.proteinPct != proteinPct ||
+      old.carbsPct != carbsPct ||
+      old.fatPct != fatPct;
 }

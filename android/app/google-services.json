@@ -12,7 +12,20 @@
           "package_name": "com.mohamed.snacktrack"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "922855108870-b6uimkkfemem72omifnj65klf9vru033.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mohamed.snacktrack",
+            "certificate_hash": "9b3a39ff0e830eed3b0129a7be96ca7977827350"
+          }
+        },
+        {
+          "client_id": "922855108870-leh05rgurfl4atfvrg6tonl31vjr9coo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCO87nNY5p3sqPnSuGL-INhD7NsWl7c3Bs"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "922855108870-leh05rgurfl4atfvrg6tonl31vjr9coo.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "922855108870-t3dj07jd5ikv092akv5au3j8dqtgu334.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.healthAssistant"
+              }
+            }
+          ]
         }
       }
     }

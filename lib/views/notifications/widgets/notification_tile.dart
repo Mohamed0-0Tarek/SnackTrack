@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart'; // example
-import 'package:health_assistant/models/notification_model.dart';
+import 'package:snacktrack/models/notification_model.dart';
 
 class NotifTile extends StatelessWidget {
-  final NotifItem   item;
-  final bool         isDark;
-  final ColorScheme  scheme;
-  final TextTheme    tt;
+  final NotifItem item;
+  final bool isDark;
+  final ColorScheme scheme;
+  final TextTheme tt;
   final VoidCallback onTap;
 
-  const NotifTile({super.key, 
+  const NotifTile({
+    super.key,
     required this.item,
     required this.isDark,
     required this.scheme,
@@ -30,10 +31,10 @@ class NotifTile extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               // Icon
               Container(
-                width: 46, height: 46,
+                width: 46,
+                height: 46,
                 decoration: BoxDecoration(
                   color: isColored
                       ? item.iconBg
@@ -56,7 +57,6 @@ class NotifTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     // Title + time row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -81,7 +81,8 @@ class NotifTile extends StatelessWidget {
                             if (item.isUnread) ...[
                               const SizedBox(width: 6),
                               Container(
-                                width: 8, height: 8,
+                                width: 8,
+                                height: 8,
                                 decoration: BoxDecoration(
                                   color: scheme.primary,
                                   shape: BoxShape.circle,
@@ -113,7 +114,9 @@ class NotifTile extends StatelessWidget {
                           final isHighPriority = tag == 'HIGH PRIORITY';
                           return Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: isHighPriority
                                   ? scheme.onSurface.withAlpha(30)

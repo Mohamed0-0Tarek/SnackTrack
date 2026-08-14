@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:health_assistant/core/widgets/ai_coach_fab.dart';
-import 'package:health_assistant/views/notufucations/notifications_screen.dart';
-import 'core/constants/app_routes.dart';
+import 'package:snacktrack/core/widgets/ai_coach_fab.dart';
+import 'package:snacktrack/models/notification_model.dart';
+import 'package:snacktrack/services/notification_service.dart';
+import 'package:snacktrack/views/notifications/notifications_screen.dart';
 import 'core/widgets/bottom_nav_bar.dart';
 import 'views/dashboard/dashboard_screen.dart';
 import 'views/history/meal_history_screen.dart';
@@ -20,6 +20,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   late NavItem _current;
+  final NotificationService _notificationService = NotificationService();
 
   // Animation controller for the FAB pulse effect
   late final AnimationController _fabPulse;
@@ -74,22 +75,63 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           ),
         ),
         title: Text(
-          'SnakeTrack',
+          'SnackTrack', // Fixed brand name typo
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             color: Theme.of(context).colorScheme.primary,
             fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications_none_outlined,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-            ),
+          StreamBuilder<List<NotifItem>>(
+            stream: _notificationService.watchNotifications(),
+            builder: (context, snapshot) {
+              final unreadCount = (snapshot.data ?? const <NotifItem>[])
+                  .where((n) => n.isUnread)
+                  .length;
+
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.notifications_none_outlined,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NotificationsScreen(),
+                      ),
+                    ),
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: 6,
+                      top: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          unreadCount > 9 ? '9+' : '$unreadCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
           const SizedBox(width: 10),
         ],
@@ -100,7 +142,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       // ── Floating Action Button → AI Coach ──────────────────────────────────
       floatingActionButton: ScaleTransition(
         scale: _fabScale,
-        child: AiCoachFab(),
+        child: const AiCoachFab(),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
 

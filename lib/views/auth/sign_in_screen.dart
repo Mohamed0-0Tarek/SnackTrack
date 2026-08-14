@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import '../../controllers/auth_controller.dart';
 import '../../core/constants/app_routes.dart';
+import 'widgets/login_form.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // sign_in_screen.dart
@@ -18,28 +17,6 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  final _emailCtrl    = TextEditingController();
-  final _passwordCtrl = TextEditingController();
-  bool _obscure       = true;
-  bool _loading       = false;
-
-  @override
-  void dispose() {
-    _emailCtrl.dispose();
-    _passwordCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    setState(() => _loading = true);
-    // TODO: wire to AuthController
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (mounted) {
-      setState(() => _loading = false);
-      context.go(AppRoutes.main);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -59,7 +36,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'SnakeTrack',
+                    'SnackTrack', // Fixed typo
                     style: tt.headlineMedium?.copyWith(
                       color: scheme.primary,
                       fontWeight: FontWeight.w700,
@@ -110,129 +87,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                         ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-
-                    // Email
-                    Text(
-                      'EMAIL ADDRESS',
-                      style: tt.labelSmall?.copyWith(
-                        letterSpacing: 1.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _InputField(
-                      controller: _emailCtrl,
-                      hint: 'name@example.com',
-                      icon: Icons.mail_outline_rounded,
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Password
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'PASSWORD',
-                          style: tt.labelSmall?.copyWith(
-                            letterSpacing: 1.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {},
-                            borderRadius: BorderRadius.circular(6),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 4, vertical: 2),
-                              child: Text(
-                                'FORGOT?',
-                                style: tt.labelSmall?.copyWith(
-                                  color: scheme.primary,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    _InputField(
-                      controller: _passwordCtrl,
-                      hint: '••••••••',
-                      icon: Icons.lock_outline_rounded,
-                      obscure: _obscure,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscure
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          color: scheme.onSurface.withAlpha(100),
-                          size: 18,
-                        ),
-                        onPressed: () => setState(() => _obscure = !_obscure),
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // CTA button
-                    _GradientButton(
-                      label: 'CONTINUE TO DASHBOARD',
-                      icon: Icons.arrow_forward_rounded,
-                      loading: _loading,
-                      onTap: _submit,
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Divider
-                    Row(
-                      children: [
-                        Expanded(
-                            child: Divider(color: Theme.of(context).dividerColor)),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            'OR CONNECT WITH',
-                            style: tt.labelSmall?.copyWith(letterSpacing: 1),
-                          ),
-                        ),
-                        Expanded(
-                            child: Divider(color: Theme.of(context).dividerColor)),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Social buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _SocialButton(
-                            label: 'Google',
-                            icon: Icons.g_mobiledata_rounded,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _SocialButton(
-                            label: 'Apple',
-                            icon: Icons.apple_rounded,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                child: const LoginForm(),
               ),
 
               const SizedBox(height: 24),
@@ -318,7 +173,6 @@ class _FeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final tt     = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -364,173 +218,4 @@ class _FeatureCard extends StatelessWidget {
   }
 }
 
-// ─── Shared: Input Field ──────────────────────────────────────────────────────
-class _InputField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-  final IconData icon;
-  final bool obscure;
-  final TextInputType? keyboardType;
-  final Widget? suffixIcon;
-
-  const _InputField({
-    required this.controller,
-    required this.hint,
-    required this.icon,
-    this.obscure      = false,
-    this.keyboardType,
-    this.suffixIcon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tt     = Theme.of(context).textTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark
-            ? scheme.surface.withAlpha(180)
-            : scheme.surfaceContainerHighest.withAlpha(60),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).dividerColor),
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscure,
-        keyboardType: keyboardType,
-        style: tt.bodyMedium,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: tt.bodyMedium?.copyWith(
-            color: scheme.onSurface.withAlpha(80),
-          ),
-          prefixIcon: Icon(icon, color: scheme.onSurface.withAlpha(120), size: 18),
-          suffixIcon: suffixIcon,
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Shared: Gradient Button ──────────────────────────────────────────────────
-class _GradientButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool loading;
-  final VoidCallback onTap;
-
-  const _GradientButton({
-    required this.label,
-    required this.icon,
-    required this.loading,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tt     = Theme.of(context).textTheme;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: loading ? null : onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [scheme.primary, scheme.secondary],
-              begin: Alignment.centerLeft,
-              end:   Alignment.centerRight,
-            ),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.primary.withAlpha(80),
-                blurRadius: 14,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: SizedBox(
-            height: 52,
-            child: Center(
-              child: loading
-                  ? const SizedBox(
-                      width: 22, height: 22,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          label,
-                          style: tt.labelLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Icon(icon, color: Colors.white, size: 18),
-                      ],
-                    ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Shared: Social Button ────────────────────────────────────────────────────
-class _SocialButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-
-  const _SocialButton({required this.label, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tt     = Theme.of(context).textTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Material(
-      color: isDark
-          ? scheme.surface.withAlpha(180)
-          : Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Theme.of(context).dividerColor),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: scheme.onSurface.withAlpha(180), size: 20),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+// ─── Widget classes moved to: lib/views/auth/widgets/

@@ -1,36 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:health_assistant/views/accessibility/widgets/reusable_card.dart';
-import 'package:health_assistant/views/accessibility/widgets/square_slider_thumb.dart';
-import 'package:health_assistant/views/accessibility/widgets/voice_sensitivity_option.dart';
+import 'package:provider/provider.dart';
+import 'package:snacktrack/controllers/setting_controller.dart';
+import 'package:snacktrack/views/accessibility/widgets/reusable_card.dart';
+import 'package:snacktrack/views/accessibility/widgets/square_slider_thumb.dart';
+import 'package:snacktrack/views/accessibility/widgets/voice_sensitivity_option.dart';
 
-class AccessibilityScreen extends StatefulWidget {
+/// Accessibility preferences (text size, high contrast, voice sensitivity,
+/// adaptive assist).
+///
+/// These four fields live on [SettingController] / [SettingsModel] now,
+/// alongside dark mode and the goal fields — this screen only reads and
+/// writes through the controller, the same way `app_settings_screen.dart`
+/// does. There's no local state and no separate save path here: every
+/// change calls a `SettingController` setter, which persists to Hive and
+/// Firestore itself (see `_persist()` in setting_controller.dart).
+class AccessibilityScreen extends StatelessWidget {
   const AccessibilityScreen({super.key});
 
-  @override
-  State<AccessibilityScreen> createState() => _AccessibilityScreenState();
-}
-
-class _AccessibilityScreenState extends State<AccessibilityScreen> {
-  double _textSize       = 1; // 0=Compact, 1=Standard, 2=Enlarged
-  bool   _highContrast   = false;
-  int    _voiceSensitivity = 1; // 0=Quiet, 1=Balanced, 2=Highly Reactive
-  bool   _adaptiveAssist = false;
-
-  String get _textSizeLabel => ['COMPACT', 'STANDARD', 'ENLARGED'][_textSize.round()];
+  static const _textSizeLabels = ['COMPACT', 'STANDARD', 'ENLARGED'];
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final tt     = Theme.of(context).textTheme;
+    final tt = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final settings = context.watch<SettingController>();
+    final textSizeLabel = _textSizeLabels[settings.textSize.round()];
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F1629) : const Color(0xFFF4F4F4),
+      backgroundColor: isDark
+          ? const Color(0xFF0F1629)
+          : const Color(0xFFF4F4F4),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           children: [
-
             // ── AppBar ───────────────────────────────────────────────────────
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -38,17 +42,24 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
-                    width: 36, height: 36,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF1A2236) : Colors.black87,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white, size: 16),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
                   ),
                 ),
-                Icon(Icons.notifications_outlined,
-                    color: scheme.onSurface, size: 26),
+                Icon(
+                  Icons.notifications_outlined,
+                  color: scheme.onSurface,
+                  size: 26,
+                ),
               ],
             ),
 
@@ -84,7 +95,8 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        width: 44, height: 44,
+                        width: 44,
+                        height: 44,
                         decoration: BoxDecoration(
                           color: isDark
                               ? const Color(0xFF0F1629)
@@ -106,15 +118,19 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Text size',
-                                style: tt.bodyLarge
-                                    ?.copyWith(fontWeight: FontWeight.bold)),
+                            Text(
+                              'Text size',
+                              style: tt.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             const SizedBox(height: 3),
                             Text(
                               'Adjust the scale of all interface text.',
                               style: tt.bodySmall?.copyWith(
-                                  color: scheme.onSurface.withAlpha(100),
-                                  height: 1.4),
+                                color: scheme.onSurface.withAlpha(100),
+                                height: 1.4,
+                              ),
                             ),
                           ],
                         ),
@@ -127,35 +143,42 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                   // Slider row
                   Row(
                     children: [
-                      Text('A',
-                          style: tt.bodySmall?.copyWith(
-                              color: scheme.onSurface.withAlpha(100),
-                              fontSize: 12)),
+                      Text(
+                        'A',
+                        style: tt.bodySmall?.copyWith(
+                          color: scheme.onSurface.withAlpha(100),
+                          fontSize: 12,
+                        ),
+                      ),
                       Expanded(
                         child: SliderTheme(
                           data: SliderTheme.of(context).copyWith(
                             trackHeight: 4,
                             thumbShape: SquareThumbShape(),
-                            overlayShape:
-                                const RoundSliderOverlayShape(overlayRadius: 16),
+                            overlayShape: const RoundSliderOverlayShape(
+                              overlayRadius: 16,
+                            ),
                             activeTrackColor: scheme.primary,
-                            inactiveTrackColor:
-                                scheme.primary.withAlpha(100),
+                            inactiveTrackColor: scheme.primary.withAlpha(100),
                             thumbColor: Colors.white,
                           ),
                           child: Slider(
-                            value: _textSize,
-                            min: 0, max: 2, divisions: 2,
-                            onChanged: (v) =>
-                                setState(() => _textSize = v),
+                            value: settings.textSize,
+                            min: 0,
+                            max: 2,
+                            divisions: 2,
+                            onChanged: settings.setTextSize,
                           ),
                         ),
                       ),
-                      Text('A',
-                          style: tt.bodyLarge?.copyWith(
-                              color: scheme.onSurface.withAlpha(100),
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold)),
+                      Text(
+                        'A',
+                        style: tt.bodyLarge?.copyWith(
+                          color: scheme.onSurface.withAlpha(100),
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
 
@@ -165,19 +188,21 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: ['COMPACT', 'STANDARD', 'ENLARGED']
-                          .map((l) => Text(
-                                l,
-                                style: tt.labelSmall?.copyWith(
-                                  color: l == _textSizeLabel
-                                      ? scheme.primary
-                                      : scheme.onSurface.withAlpha(90),
-                                  fontWeight: l == _textSizeLabel
-                                      ? FontWeight.bold
-                                      : FontWeight.w400,
-                                  fontSize: 10,
-                                  letterSpacing: 0.8,
-                                ),
-                              ))
+                          .map(
+                            (l) => Text(
+                              l,
+                              style: tt.labelSmall?.copyWith(
+                                color: l == textSizeLabel
+                                    ? scheme.primary
+                                    : scheme.onSurface.withAlpha(90),
+                                fontWeight: l == textSizeLabel
+                                    ? FontWeight.bold
+                                    : FontWeight.w400,
+                                fontSize: 10,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          )
                           .toList(),
                     ),
                   ),
@@ -193,38 +218,46 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
               child: Row(
                 children: [
                   Container(
-                    width: 44, height: 44,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
                       color: isDark
                           ? const Color(0xFF0F1629)
                           : const Color(0xFFF0F0F0),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.contrast_rounded,
-                        color: scheme.onSurface, size: 22),
+                    child: Icon(
+                      Icons.contrast_rounded,
+                      color: scheme.onSurface,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('High contrast mode',
-                            style: tt.bodyLarge
-                                ?.copyWith(fontWeight: FontWeight.bold)),
+                        Text(
+                          'High contrast mode',
+                          style: tt.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         const SizedBox(height: 3),
                         Text(
                           'Increases visual distinction between elements.',
                           style: tt.bodySmall?.copyWith(
-                              color: scheme.onSurface.withAlpha(100),
-                              height: 1.4),
+                            color: scheme.onSurface.withAlpha(100),
+                            height: 1.4,
+                          ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 10),
                   Switch(
-                    value: _highContrast,
-                    onChanged: (v) => setState(() => _highContrast = v),
+                    value: settings.highContrast,
+                    onChanged: settings.setHighContrast,
                     activeThumbColor: scheme.primary,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -244,28 +277,36 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                   Row(
                     children: [
                       Container(
-                        width: 44, height: 44,
+                        width: 44,
+                        height: 44,
                         decoration: BoxDecoration(
                           color: scheme.secondary,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.mic_rounded,
-                            color: Colors.white, size: 22),
+                        child: const Icon(
+                          Icons.mic_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Voice input sensitivity',
-                                style: tt.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.bold)),
+                            Text(
+                              'Voice input sensitivity',
+                              style: tt.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             const SizedBox(height: 3),
                             Text(
                               'Refine how the app listens for commands.',
                               style: tt.bodySmall?.copyWith(
-                                  color: scheme.onSurface.withAlpha(100),
-                                  height: 1.4),
+                                color: scheme.onSurface.withAlpha(100),
+                                height: 1.4,
+                              ),
                             ),
                           ],
                         ),
@@ -282,30 +323,30 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                         icon: Icons.favorite_border_rounded,
                         label: 'QUIET',
                         index: 0,
-                        selected: _voiceSensitivity,
+                        selected: settings.voiceSensitivity,
                         scheme: scheme,
                         isDark: isDark,
-                        onTap: () => setState(() => _voiceSensitivity = 0),
+                        onTap: () => settings.setVoiceSensitivity(0),
                       ),
                       const SizedBox(width: 8),
                       VoiceOption(
                         icon: Icons.balance_rounded,
                         label: 'BALANCED',
                         index: 1,
-                        selected: _voiceSensitivity,
+                        selected: settings.voiceSensitivity,
                         scheme: scheme,
                         isDark: isDark,
-                        onTap: () => setState(() => _voiceSensitivity = 1),
+                        onTap: () => settings.setVoiceSensitivity(1),
                       ),
                       const SizedBox(width: 8),
                       VoiceOption(
                         icon: Icons.bolt_rounded,
                         label: 'HIGHLY\nREACTIVE',
                         index: 2,
-                        selected: _voiceSensitivity,
+                        selected: settings.voiceSensitivity,
                         scheme: scheme,
                         isDark: isDark,
-                        onTap: () => setState(() => _voiceSensitivity = 2),
+                        onTap: () => settings.setVoiceSensitivity(2),
                       ),
                     ],
                   ),
@@ -324,9 +365,11 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.info_outline_rounded,
-                            size: 14,
-                            color: scheme.onSurface.withAlpha(100)),
+                        Icon(
+                          Icons.info_outline_rounded,
+                          size: 14,
+                          color: scheme.onSurface.withAlpha(100),
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -372,17 +415,21 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                   Text(
                     'Turn on automatic UI adjustments based on your usage patterns to minimize navigation fatigue.',
                     style: tt.bodySmall?.copyWith(
-                        color: Colors.white70, height: 1.6),
+                      color: Colors.white70,
+                      height: 1.6,
+                    ),
                   ),
                   const SizedBox(height: 18),
                   GestureDetector(
                     onTap: () =>
-                        setState(() => _adaptiveAssist = !_adaptiveAssist),
+                        settings.setAdaptiveAssist(!settings.adaptiveAssist),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 13),
+                        horizontal: 20,
+                        vertical: 13,
+                      ),
                       decoration: BoxDecoration(
-                        color: _adaptiveAssist
+                        color: settings.adaptiveAssist
                             ? Colors.white
                             : Colors.white.withAlpha(50),
                         borderRadius: BorderRadius.circular(12),
@@ -393,11 +440,11 @@ class _AccessibilityScreenState extends State<AccessibilityScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          _adaptiveAssist
+                          settings.adaptiveAssist
                               ? 'Adaptive Mode On'
                               : 'Enable Adaptive Mode',
                           style: tt.labelLarge?.copyWith(
-                            color: _adaptiveAssist
+                            color: settings.adaptiveAssist
                                 ? const Color(0xFF6A3DE8)
                                 : Colors.white,
                             fontWeight: FontWeight.bold,

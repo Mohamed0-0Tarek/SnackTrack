@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:health_assistant/core/widgets/custom_button.dart';
-import 'package:health_assistant/views/settings/widgets/account_title.dart';
-import 'package:health_assistant/core/widgets/divider.dart';
-import 'package:health_assistant/views/settings/widgets/section_card_wrapper.dart';
-import 'package:health_assistant/views/settings/widgets/section_header.dart';
-import 'package:health_assistant/views/settings/widgets/theme_toggle_button.dart';
+import 'package:go_router/go_router.dart';
+import 'package:snacktrack/core/widgets/custom_button.dart';
+import 'package:snacktrack/services/meal_reminder_service.dart';
+import 'package:snacktrack/services/storage_service.dart';
+import 'package:snacktrack/views/settings/widgets/account_title.dart';
+import 'package:snacktrack/core/widgets/divider.dart';
+import 'package:snacktrack/views/settings/widgets/section_card_wrapper.dart';
+import 'package:snacktrack/views/settings/widgets/section_header.dart';
+import 'package:snacktrack/views/settings/widgets/theme_toggle_button.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/setting_controller.dart';
+import '../../core/constants/app_routes.dart';
 
 class AppSettingsScreen extends StatelessWidget {
   const AppSettingsScreen({super.key});
@@ -18,7 +22,7 @@ class AppSettingsScreen extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final auth = context.read<AuthController>();
-    final settings = context.watch<SettingsController>();
+    final settings = context.watch<SettingController>();
 
     return Scaffold(
       backgroundColor: isDark
@@ -28,7 +32,7 @@ class AppSettingsScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           children: [
-            // Custom AppBar 
+            // Custom AppBar
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -118,11 +122,11 @@ class AppSettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   CustomButton(
-                    label: 'Manage Subscription', 
+                    label: 'Manage Subscription',
                     onPressed: () {},
                     outlined: true,
                     color: Colors.white70,
-                    ),
+                  ),
                 ],
               ),
             ),
@@ -250,6 +254,189 @@ class AppSettingsScreen extends StatelessWidget {
 
             const SizedBox(height: 12),
 
+            // ── Nutrition Goals card ───────────────────────────────────────
+            SectionCard(
+              isDark: isDark,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SectionHeader(
+                    icon: Icons.restaurant_outlined,
+                    label: 'Nutrition Goals',
+                    iconColor: const Color(0xFF00B4DB),
+                    isDark: isDark,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Set your daily targets for calories, macros, and hydration.',
+                    style: tt.bodySmall?.copyWith(
+                      color: scheme.onSurface.withAlpha(120),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _GoalRow(
+                    icon: Icons.local_fire_department_outlined,
+                    iconColor: const Color(0xFFFF6B35),
+                    label: 'Calories',
+                    value: '${settings.goalCalories} kcal',
+                    isDark: isDark,
+                    onTap: () => _editGoal(
+                      context,
+                      title: 'Daily Calorie Goal',
+                      unit: 'kcal',
+                      initialValue: settings.goalCalories.toDouble(),
+                      min: 1000,
+                      max: 5000,
+                      divisions: 80,
+                      decimals: 0,
+                      onSaved: (v) => settings.setGoalCalories(v.round()),
+                    ),
+                  ),
+                  AppDivider(isDark: isDark),
+                  _GoalRow(
+                    icon: Icons.fitness_center_outlined,
+                    iconColor: const Color(0xFF6A3DE8),
+                    label: 'Protein',
+                    value: '${settings.goalProtein.round()} g',
+                    isDark: isDark,
+                    onTap: () => _editGoal(
+                      context,
+                      title: 'Daily Protein Goal',
+                      unit: 'g',
+                      initialValue: settings.goalProtein,
+                      min: 30,
+                      max: 300,
+                      divisions: 54,
+                      decimals: 0,
+                      onSaved: (v) => settings.setGoalProtein(v),
+                    ),
+                  ),
+                  AppDivider(isDark: isDark),
+                  _GoalRow(
+                    icon: Icons.grain_rounded,
+                    iconColor: const Color(0xFF00B4DB),
+                    label: 'Carbs',
+                    value: '${settings.goalCarbs.round()} g',
+                    isDark: isDark,
+                    onTap: () => _editGoal(
+                      context,
+                      title: 'Daily Carbs Goal',
+                      unit: 'g',
+                      initialValue: settings.goalCarbs,
+                      min: 30,
+                      max: 600,
+                      divisions: 114,
+                      decimals: 0,
+                      onSaved: (v) => settings.setGoalCarbs(v),
+                    ),
+                  ),
+                  AppDivider(isDark: isDark),
+                  _GoalRow(
+                    icon: Icons.water_drop_outlined,
+                    iconColor: const Color(0xFF4CAF50),
+                    label: 'Fat',
+                    value: '${settings.goalFat.round()} g',
+                    isDark: isDark,
+                    onTap: () => _editGoal(
+                      context,
+                      title: 'Daily Fat Goal',
+                      unit: 'g',
+                      initialValue: settings.goalFat,
+                      min: 20,
+                      max: 200,
+                      divisions: 36,
+                      decimals: 0,
+                      onSaved: (v) => settings.setGoalFat(v),
+                    ),
+                  ),
+                  AppDivider(isDark: isDark),
+                  _GoalRow(
+                    icon: Icons.water_outlined,
+                    iconColor: const Color(0xFF2196F3),
+                    label: 'Water',
+                    value: '${settings.goalWaterMl} ml',
+                    isDark: isDark,
+                    onTap: () => _editGoal(
+                      context,
+                      title: 'Daily Water Goal',
+                      unit: 'ml',
+                      initialValue: settings.goalWaterMl.toDouble(),
+                      min: 1000,
+                      max: 5000,
+                      divisions: 40,
+                      decimals: 0,
+                      onSaved: (v) => settings.setGoalWaterMl(v.round()),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // ── Health Tracking card ────────────────────────────────────────
+            SectionCard(
+              isDark: isDark,
+              child: Column(
+                children: [
+                  SectionHeader(
+                    icon: Icons.favorite_outline,
+                    label: 'Health Tracking',
+                    iconColor: const Color(0xFF4CAF50),
+                    isDark: isDark,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Monitor your weight, measurements, and progress over time.',
+                    style: tt.bodySmall?.copyWith(
+                      color: scheme.onSurface.withAlpha(120),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _GoalRow(
+                    icon: Icons.monitor_weight_outlined,
+                    iconColor: const Color(0xFF6A3DE8),
+                    label: 'Weight Tracking',
+                    value: '',
+                    isDark: isDark,
+                    onTap: () => context.push(AppRoutes.weightTracking),
+                  ),
+                  const SizedBox(height: 4),
+                  AppDivider(isDark: isDark),
+                  _GoalRow(
+                    icon: Icons.menu_book_outlined,
+                    iconColor: const Color(0xFF00B4DB),
+                    label: 'My Recipes',
+                    value: '',
+                    isDark: isDark,
+                    onTap: () => context.push(AppRoutes.recipeList),
+                  ),
+                  const SizedBox(height: 4),
+                  AppDivider(isDark: isDark),
+                  _GoalRow(
+                    icon: Icons.calendar_view_week_rounded,
+                    iconColor: const Color(0xFFFF6B35),
+                    label: 'Meal Plan',
+                    value: '',
+                    isDark: isDark,
+                    onTap: () => context.push(AppRoutes.mealPlan),
+                  ),
+                  const SizedBox(height: 4),
+                  AppDivider(isDark: isDark),
+                  _GoalRow(
+                    icon: Icons.schedule_rounded,
+                    iconColor: const Color(0xFF6A3DE8),
+                    label: 'Meal Reminders',
+                    value: '',
+                    isDark: isDark,
+                    onTap: () => _showMealRemindersSheet(context, isDark, scheme, tt),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
             // ── Security & account card ───────────────────────────────────────
             SectionCard(
               isDark: isDark,
@@ -284,7 +471,7 @@ class AppSettingsScreen extends StatelessWidget {
                       Icons.chevron_right_rounded,
                       color: scheme.onSurface.withAlpha(120),
                     ),
-                    onTap: () {},
+                    onTap: () => context.push(AppRoutes.changePassword),
                   ),
                   AppDivider(isDark: isDark),
                   // Log Out
@@ -322,4 +509,377 @@ class AppSettingsScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+// ─── Goal Row ────────────────────────────────────────────────────────────────
+
+class _GoalRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _GoalRow({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: iconColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ),
+              Text(
+                value,
+                style: tt.bodyMedium?.copyWith(
+                  color: scheme.onSurface.withAlpha(160),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: scheme.onSurface.withAlpha(120),
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Meal Reminders Sheet ───────────────────────────────────────────────────
+
+const Map<String, String> _defaultReminderTimes = {
+  'breakfast': '08:00',
+  'lunch': '12:30',
+  'dinner': '18:00',
+  'snack': '15:30',
+};
+
+Future<void> _showMealRemindersSheet(
+  BuildContext context,
+  bool isDark,
+  ColorScheme scheme,
+  TextTheme tt,
+) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final reminderService = MealReminderService();
+  Map<String, String> times =
+      StorageService.getReminderTimes() ?? Map.from(_defaultReminderTimes);
+  bool enabled = StorageService.getReminderEnabled();
+  bool changed = false;
+
+  await showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: isDark ? const Color(0xFF0F1629) : const Color(0xFFF4F4F4),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (ctx) {
+      return StatefulBuilder(
+        builder: (ctx, setModalState) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Meal Reminders',
+                        style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    Switch(
+                      value: enabled,
+                      onChanged: (v) {
+                        setModalState(() => enabled = v);
+                        changed = true;
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  enabled
+                      ? 'Notifications will remind you to log your meals.'
+                      : 'Meal reminders are off.',
+                  style: tt.bodySmall?.copyWith(color: scheme.onSurface.withAlpha(120)),
+                ),
+                const SizedBox(height: 20),
+                if (enabled)
+                  ...mealTypes.entries.map((entry) {
+                    final type = entry.key;
+                    final label = entry.value;
+                    final time = times[type] ?? _defaultReminderTimes[type]!;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 28,
+                                child: Icon(mealIcons[type],
+                                    size: 20, color: scheme.primary),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(label, style: tt.bodyMedium),
+                            ],
+                          ),
+                          GestureDetector(
+                            onTap: () async {
+                              final picked = await showTimePicker(
+                                context: ctx,
+                                initialTime: TimeOfDay(
+                                  hour: int.parse(time.split(':')[0]),
+                                  minute: int.parse(time.split(':')[1]),
+                                ),
+                              );
+                              if (picked != null) {
+                                final formatted =
+                                    '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                                setModalState(() {
+                                  times[type] = formatted;
+                                });
+                                changed = true;
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: scheme.primary.withAlpha(20),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Theme.of(ctx).dividerColor),
+                              ),
+                              child: Text(
+                                time,
+                                style: tt.labelLarge?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: scheme.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                const SizedBox(height: 8),
+                if (enabled)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (changed) {
+                          StorageService.saveReminderTimes(times);
+                          StorageService.saveReminderEnabled(enabled);
+                          reminderService.scheduleMealReminders(times);
+                        }
+                        Navigator.pop(ctx);
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(changed
+                                ? 'Meal reminders updated.'
+                                : 'Meal reminders are active.'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      child: const Text('Save'),
+                    ),
+                  ),
+                if (!enabled)
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        if (changed) {
+                          StorageService.saveReminderTimes(times);
+                          StorageService.saveReminderEnabled(false);
+                          reminderService.cancelAll();
+                        }
+                        Navigator.pop(ctx);
+                        messenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('Meal reminders turned off.'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      child: const Text('Done'),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+const Map<String, IconData> mealIcons = {
+  'breakfast': Icons.free_breakfast,
+  'lunch': Icons.lunch_dining,
+  'dinner': Icons.dinner_dining,
+  'snack': Icons.cookie,
+};
+
+const Map<String, String> mealTypes = {
+  'breakfast': 'Breakfast',
+  'lunch': 'Lunch',
+  'dinner': 'Dinner',
+  'snack': 'Snack',
+};
+
+// ─── Goal Edit Dialog ────────────────────────────────────────────────────────
+
+Future<void> _editGoal(
+  BuildContext context, {
+  required String title,
+  required String unit,
+  required double initialValue,
+  required double min,
+  required double max,
+  required int divisions,
+  required int decimals,
+  required void Function(double) onSaved,
+}) async {
+  double value = initialValue;
+
+  final result = await showDialog<double>(
+    context: context,
+    builder: (ctx) {
+      final scheme = Theme.of(ctx).colorScheme;
+      final tt = Theme.of(ctx).textTheme;
+
+      return StatefulBuilder(
+        builder: (ctx, setState) {
+          final display = decimals == 0
+              ? value.round().toString()
+              : value.toStringAsFixed(decimals);
+
+          return AlertDialog(
+            backgroundColor: Theme.of(ctx).cardColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Text(
+              title,
+              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$display $unit',
+                  style: tt.headlineMedium?.copyWith(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SliderTheme(
+                  data: SliderTheme.of(ctx).copyWith(
+                    trackHeight: 3,
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 7,
+                    ),
+                    overlayShape: const RoundSliderOverlayShape(
+                      overlayRadius: 14,
+                    ),
+                    activeTrackColor: scheme.primary,
+                    inactiveTrackColor: scheme.primary.withAlpha(38),
+                    thumbColor: scheme.primary,
+                  ),
+                  child: Slider(
+                    value: value,
+                    min: min,
+                    max: max,
+                    divisions: divisions,
+                    onChanged: (v) => setState(() => value = v),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${min.round()} $unit',
+                      style: tt.labelSmall?.copyWith(
+                        color: scheme.onSurface.withAlpha(120),
+                      ),
+                    ),
+                    Text(
+                      '${max.round()} $unit',
+                      style: tt.labelSmall?.copyWith(
+                        color: scheme.onSurface.withAlpha(120),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  'Cancel',
+                  style: tt.labelLarge?.copyWith(
+                    color: scheme.onSurface.withAlpha(160),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, value),
+                child: Text(
+                  'Save',
+                  style: tt.labelLarge?.copyWith(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+
+  if (result != null) onSaved(result);
 }

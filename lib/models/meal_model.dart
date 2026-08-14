@@ -1,62 +1,33 @@
-/// Represents a single meal entry with nutritional data and metadata.
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+/// Represents a single logged meal.
 ///
-/// ## Why immutable models?
-/// All fields are declared `final`, making this class **immutable**.
-/// Once created, a [MealModel] can never be changed — you must build
-/// a new instance instead.  This prevents accidental side-effects
-/// (e.g. one widget silently editing a model another widget is reading)
-/// and makes state management with Provider much safer.
+/// ## What changed vs the old MealModel
+/// Added [notes] and [analyzedBy] — both are in the agreed Firestore
+/// schema (`users/{uid}/meals/{mealId}`) but were missing here, which
+/// would have caused silent data loss the moment MealService started
+/// writing real documents.
 ///
-/// ## JSON round-tripping
-/// [fromJson] creates a model from a `Map` (typically decoded from HTTP
-/// response JSON), while [toJson] converts it back for API requests.
-/// The `as num` casts in [fromJson] are intentional: JSON numbers may
-/// arrive as either `int` or `double`, and `num` covers both before
-/// calling `.toDouble()`.
+/// Also added [fromFirestore] / [toFirestoreMap], which work with
+/// Firestore's `Timestamp` type instead of ISO date strings. The old
+/// [fromJson]/[toJson] are kept as-is so nothing that already calls them
+/// breaks — they're just no longer the primary path for persistence.
 class MealModel {
-  /// Unique server-assigned identifier.
-  final String   id;
-
-  /// Descriptive food name (e.g. "Oatmeal & Berries").
-  final String   name;
-
-  /// Meal category — "breakfast", "lunch", "dinner", or "snack".
-  ///
-  /// Defaults to `'snack'` so existing code that creates a [MealModel]
-  /// without specifying [type] still works (backward-compatible).
-  final String   type;
-
-  /// Total kilocalories for this meal.
-  final int      calories;
-
-  /// Grams of protein.
-  final double   protein;
-
-  /// Grams of carbohydrates.
-  final double   carbs;
-
-  /// Grams of fat.
-  final double   fat;
-
-  /// Timestamp when the meal was logged by the user.
+  final String id;
+  final String name;
+  final String type;
+  final int calories;
+  final double protein;
+  final double carbs;
+  final double fat;
   final DateTime loggedAt;
+  final String? imageUrl;
+  final String? source;
+  final String? notes;
+  final String? analyzedBy; // e.g. "gemini-1.5", "manual", "favorite"
+  final Map<String, double>? vitamins; // e.g. {"Vitamin A": 0.85, "Vitamin C": 0.42}
+  final Map<String, double>? minerals; // e.g. {"Iron": 0.28, "Magnesium": 0.55}
 
-  /// Optional URL or local asset path for the meal photo.
-  ///
-  /// Nullable because not every meal has a photo — the UI shows a
-  /// gradient placeholder when this is `null` (see [MealHistoryCard]).
-  final String?  imageUrl;
-
-  /// How the meal was prepared — "Restaurant", "Homemade", "Delivery", etc.
-  ///
-  /// Also nullable; the UI simply omits the source badge when absent.
-  final String?  source;
-
-  /// Creates a [MealModel].
-  ///
-  /// [id], [name], [calories], [protein], [carbs], [fat], and [loggedAt]
-  /// are required.  [type] defaults to `'snack'`.  [imageUrl] and [source]
-  /// are optional.
   MealModel({
     required this.id,
     required this.name,
@@ -68,36 +39,96 @@ class MealModel {
     required this.loggedAt,
     this.imageUrl,
     this.source,
+    this.notes,
+    this.analyzedBy,
+    this.vitamins,
+    this.minerals,
   });
 
-  /// Constructs a [MealModel] from a decoded JSON map.
-  ///
-  /// The `??` operators provide safe defaults for fields that might be
-  /// missing in older API responses, ensuring backward compatibility.
+  /// Old JSON path — kept for any code still using REST-style payloads.
   factory MealModel.fromJson(Map<String, dynamic> json) => MealModel(
-    id:       json['id'],
-    name:     json['name'],
-    type:     json['type'] ?? 'snack',
-    calories: json['calories'],
-    // `as num` handles both int and double from JSON decoders
-    protein:  (json['protein'] as num).toDouble(),
-    carbs:    (json['carbs']   as num).toDouble(),
-    fat:      (json['fat']     as num).toDouble(),
-    loggedAt: DateTime.parse(json['logged_at']),
-    imageUrl: json['image_url'],
-    source:   json['source'],
-  );
+        id: json['id'],
+        name: json['name'],
+        type: json['type'] ?? 'snack',
+        calories: json['calories'],
+        protein: (json['protein'] as num).toDouble(),
+        carbs: (json['carbs'] as num).toDouble(),
+        fat: (json['fat'] as num).toDouble(),
+        loggedAt: DateTime.parse(json['logged_at']),
+        imageUrl: json['image_url'],
+        source: json['source'],
+        notes: json['notes'],
+        analyzedBy: json['analyzed_by'],
+      );
 
-  /// Serialises this model to a JSON-encodable map for API requests.
-  ///
-  /// The `if (x != null)` syntax is a Dart **collection-if**: the entry
-  /// is only included in the map when the value is non-null, keeping the
-  /// payload minimal.
   Map<String, dynamic> toJson() => {
-    'id': id, 'name': name, 'type': type, 'calories': calories,
-    'protein': protein, 'carbs': carbs, 'fat': fat,
-    'logged_at': loggedAt.toIso8601String(),
-    if (imageUrl != null) 'image_url': imageUrl,
-    if (source != null) 'source': source,
-  };
+        'id': id,
+        'name': name,
+        'type': type,
+        'calories': calories,
+        'protein': protein,
+        'carbs': carbs,
+        'fat': fat,
+        'logged_at': loggedAt.toIso8601String(),
+        if (imageUrl != null) 'image_url': imageUrl,
+        if (source != null) 'source': source,
+        if (notes != null) 'notes': notes,
+        if (analyzedBy != null) 'analyzed_by': analyzedBy,
+      };
+
+  /// Builds a MealModel from a Firestore document snapshot.
+  /// `loggedAt` arrives as a Firestore [Timestamp], not a string.
+  factory MealModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    final loggedAtRaw = data['loggedAt'];
+    return MealModel(
+      id: doc.id,
+      name: data['name'] ?? '',
+      type: data['type'] ?? 'snack',
+      calories: (data['calories'] as num?)?.toInt() ?? 0,
+      protein: (data['protein'] as num?)?.toDouble() ?? 0,
+      carbs: (data['carbs'] as num?)?.toDouble() ?? 0,
+      fat: (data['fat'] as num?)?.toDouble() ?? 0,
+      loggedAt: loggedAtRaw is Timestamp
+          ? loggedAtRaw.toDate()
+          : DateTime.now(),
+      imageUrl: data['imageUrl'],
+      source: data['source'],
+      notes: data['notes'],
+      analyzedBy: data['analyzedBy'],
+      vitamins: data['vitamins'] != null
+          ? Map<String, double>.from(
+              (data['vitamins'] as Map).map((k, v) => MapEntry(k, (v as num).toDouble())),
+            )
+          : null,
+      minerals: data['minerals'] != null
+          ? Map<String, double>.from(
+              (data['minerals'] as Map).map((k, v) => MapEntry(k, (v as num).toDouble())),
+            )
+          : null,
+    );
+  }
+
+  /// Serializes for a Firestore write. Does NOT include `id` (Firestore
+  /// generates/uses the doc ID separately) and uses [FieldValue
+  /// .serverTimestamp] for new writes — callers that need an exact local
+  /// DateTime to send (e.g. updates) can use [toFirestoreMapWithDate]
+  /// instead.
+  Map<String, dynamic> toFirestoreMap({bool useServerTimestamp = true}) => {
+        'name': name,
+        'type': type,
+        'calories': calories,
+        'protein': protein,
+        'carbs': carbs,
+        'fat': fat,
+        'loggedAt': useServerTimestamp
+            ? FieldValue.serverTimestamp()
+            : Timestamp.fromDate(loggedAt),
+        if (imageUrl != null) 'imageUrl': imageUrl,
+        if (source != null) 'source': source,
+        if (notes != null) 'notes': notes,
+        if (analyzedBy != null) 'analyzedBy': analyzedBy,
+        if (vitamins != null) 'vitamins': vitamins,
+        if (minerals != null) 'minerals': minerals,
+      };
 }

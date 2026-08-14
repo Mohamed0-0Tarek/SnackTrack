@@ -5,7 +5,7 @@ class AiMessage extends StatelessWidget {
   final String time;
   final String message;
 
-  const AiMessage({required this.time, required this.message});
+  const AiMessage({super.key, required this.time, required this.message});
 
   @override
   Widget build(BuildContext context) {

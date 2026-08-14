@@ -2,7 +2,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class GradeCard extends StatelessWidget {
-  const GradeCard();
+  final String grade;
+  final double progress;
+
+  const GradeCard({super.key, this.grade = 'B', this.progress = 0.92});
 
   @override
   Widget build(BuildContext context) {
@@ -17,14 +20,14 @@ class GradeCard extends StatelessWidget {
           painter: _RingPainter(
             color: scheme.primary,
             trackColor: scheme.primary.withAlpha(30),
-            progress: 0.92,
+            progress: progress,
           ),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'A',
+                  grade,
                   style: tt.displayLarge?.copyWith(
                     color: scheme.primary,
                     fontWeight: FontWeight.w800,
@@ -33,7 +36,7 @@ class GradeCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'OPTIMAL',
+                  'GRADE',
                   style: tt.labelSmall?.copyWith(letterSpacing: 1.5),
                 ),
               ],
@@ -62,7 +65,6 @@ class _RingPainter extends CustomPainter {
     final radius = size.width / 2 - 8;
     const strokeWidth = 10.0;
 
-    // Track
     canvas.drawCircle(
       center,
       radius,
@@ -72,7 +74,6 @@ class _RingPainter extends CustomPainter {
         ..strokeWidth = strokeWidth,
     );
 
-    // Progress arc
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -pi / 2,

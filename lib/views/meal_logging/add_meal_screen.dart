@@ -1,7 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/meal_controller.dart';
+import '../../core/constants/app_routes.dart';
+import '../../services/voice_input_service.dart';
 
+/// ## What changed in this file
+/// 1. After a successful `analyzeMeal()` call, this screen now actually
+///    navigates to `MealAnalysisScreen` (via `AppRoutes.analysis`) —
+///    previously nothing happened after analysis finished, so a
+///    successful AI call had no visible effect.
+/// 2. "Quick Log Favorites" now loads REAL recent meal names from
+///    Firestore via `MealController.getQuickFavorites()`, replacing the
+///    hardcoded `_FavItem` list (fake names, fake calories, fake asset
+///    paths that don't exist in the project).
+/// 3. Tapping a favorite re-runs the real AI analysis on that meal name
+///    and navigates to the analysis screen — same path as manual entry —
+///    rather than inventing a calorie count for a "favorite" that
+///    doesn't actually carry stored nutrition data.
 class AddMealScreen extends StatefulWidget {
   const AddMealScreen({super.key});
 
@@ -14,44 +30,29 @@ class _AddMealScreenState extends State<AddMealScreen> {
 
   MealInputMethod _selected = MealInputMethod.text;
 
-  final List<_FavItem> _favorites = const [
-    _FavItem(
-      name: 'Avocado Toast',
-      kcal: 320,
-      mealType: 'Breakfast',
-      image: 'assets/images/avocado_toast.png',
-    ),
-    _FavItem(
-      name: 'Protein Oats',
-      kcal: 450,
-      mealType: 'Breakfast',
-      image: 'assets/images/protein_oats.png',
-    ),
-    _FavItem(
-      name: 'Salmon Quinoa',
-      kcal: 580,
-      mealType: 'Dinner',
-      image: 'assets/images/salmon_quinoa.png',
-    ),
-    _FavItem(
-      name: 'Green Monster',
-      kcal: 180,
-      mealType: 'Snack',
-      image: 'assets/images/green_monster.png',
-    ),
-    _FavItem(
-      name: 'Pesto Pasta',
-      kcal: 610,
-      mealType: 'Lunch',
-      image: 'assets/images/pesto_pasta.png',
-    ),
-    _FavItem(
-      name: 'Homemade Pizza',
-      kcal: 750,
-      mealType: 'Dinner',
-      image: 'assets/images/homemade_pizza.png',
-    ),
-  ];
+  List<String> _favoriteNames = [];
+  bool _favoritesLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    final controller = context.read<MealController>();
+    try {
+      final names = await controller.getQuickFavorites();
+      if (mounted) {
+        setState(() {
+          _favoriteNames = names;
+          _favoritesLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _favoritesLoading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -93,7 +94,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                 selected: _selected,
                 icon: Icons.edit_note_rounded,
                 iconColor: colors.primary,
-                bgColor: colors.primary.withOpacity(0.10),
+                bgColor: colors.primary.withValues(alpha: 0.10),
                 label: 'Text',
                 subtitle: 'Type your meal details manually',
                 onTap: () => setState(() => _selected = MealInputMethod.text),
@@ -104,7 +105,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                 selected: _selected,
                 icon: Icons.camera_alt_outlined,
                 iconColor: colors.secondary,
-                bgColor: colors.secondary.withOpacity(0.10),
+                bgColor: colors.secondary.withValues(alpha: 0.10),
                 label: 'Photo',
                 subtitle: 'Snap a picture for instant analysis',
                 onTap: () => setState(() => _selected = MealInputMethod.photo),
@@ -115,7 +116,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                 selected: _selected,
                 icon: Icons.qr_code_scanner_rounded,
                 iconColor: colors.tertiary,
-                bgColor: colors.tertiary.withOpacity(0.10),
+                bgColor: colors.tertiary.withValues(alpha: 0.10),
                 label: 'Barcode',
                 subtitle: 'Scan packaged food labels',
                 onTap: () =>
@@ -127,7 +128,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                 selected: _selected,
                 icon: Icons.mic_outlined,
                 iconColor: Colors.redAccent,
-                bgColor: Colors.redAccent.withOpacity(0.10),
+                bgColor: Colors.redAccent.withValues(alpha: 0.10),
                 label: 'Voice',
                 subtitle: 'Describe your meal out loud',
                 onTap: () => setState(() => _selected = MealInputMethod.voice),
@@ -137,14 +138,14 @@ class _AddMealScreenState extends State<AddMealScreen> {
 
               // ── Analyze button ─────────────────────────────────────────────
               _AnalyzeButton(
-                isLoading: controller.isLoading,
+                isLoading: controller.isAnalyzing,
                 onTap: () => _onAnalyzeTap(context, controller),
               ),
 
-              if (controller.error != null) ...[
+              if (controller.analysisError != null) ...[
                 const SizedBox(height: 10),
                 Text(
-                  controller.error!,
+                  controller.analysisError!,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colors.error,
                   ),
@@ -154,38 +155,35 @@ class _AddMealScreenState extends State<AddMealScreen> {
               const SizedBox(height: 32),
 
               // ── Quick Log Favorites ────────────────────────────────────────
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Quick Log Favorites',
-                    style: theme.textTheme.headlineMedium,
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(
-                      'View All',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: colors.primary,
-                      ),
-                    ),
-                  ),
-                ],
+              Text(
+                'Quick Log Favorites',
+                style: theme.textTheme.headlineMedium,
               ),
 
               const SizedBox(height: 12),
 
-              ..._favorites.map(
-                (fav) => _FavoriteRow(
-                  item: fav,
-                  onAdd: () => _quickLog(context, controller, fav),
+              if (_favoritesLoading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_favoriteNames.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    "Log a few meals and they'll show up here for quick re-logging.",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                )
+              else
+                ..._favoriteNames.map(
+                  (name) => _FavoriteRow(
+                    name: name,
+                    onTap: () => _quickLogFavorite(context, controller, name),
+                  ),
                 ),
-              ),
 
               const SizedBox(height: 32),
             ],
@@ -195,7 +193,8 @@ class _AddMealScreenState extends State<AddMealScreen> {
     );
   }
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
+  // ── Handlers ───────────────────────────────────────────────────────────
+
   void _onAnalyzeTap(BuildContext context, MealController controller) {
     switch (_selected) {
       case MealInputMethod.text:
@@ -212,9 +211,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
         ).showSnackBar(const SnackBar(content: Text('Barcode — coming soon')));
         break;
       case MealInputMethod.voice:
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Voice — coming soon')));
+        _startVoiceInput(context, controller);
         break;
     }
   }
@@ -258,12 +255,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  if (_descCtrl.text.isNotEmpty) {
-                    controller.analyzeMeal(_descCtrl.text);
-                  }
-                },
+                onPressed: () => _submitAnalysis(ctx, context, controller),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.primary,
                   foregroundColor: colors.onPrimary,
@@ -281,22 +273,240 @@ class _AddMealScreenState extends State<AddMealScreen> {
     );
   }
 
-  void _quickLog(
+  /// Closes the bottom sheet, runs the real AI analysis, then — only on
+  /// success — navigates to MealAnalysisScreen. On failure the sheet is
+  /// already closed, so the error surfaces back on this screen via a
+  /// SnackBar (controller.analysisError is also shown inline in build()).
+  Future<void> _submitAnalysis(
+    BuildContext sheetContext,
+    BuildContext screenContext,
+    MealController controller,
+  ) async {
+    final description = _descCtrl.text.trim();
+    if (description.isEmpty) return;
+
+    Navigator.pop(sheetContext);
+
+    final success = await controller.analyzeMeal(description);
+    _descCtrl.clear();
+
+    if (!screenContext.mounted) return;
+
+    if (success) {
+      screenContext.push(AppRoutes.analysis);
+    } else {
+      ScaffoldMessenger.of(screenContext).showSnackBar(
+        SnackBar(
+          content: Text(controller.analysisError ?? 'Could not analyze meal.'),
+        ),
+      );
+    }
+  }
+
+  /// Re-runs AI analysis on a previously-logged meal name and navigates
+  /// to the same analysis screen as manual entry. This is intentionally
+  /// a real analysis call, not a cached calorie lookup — Firestore only
+  /// stores the name for "recent distinct meals", not full nutrition
+  /// data we could safely reuse without re-checking serving size etc.
+  Future<void> _quickLogFavorite(
     BuildContext context,
     MealController controller,
-    _FavItem fav,
-  ) {
-    controller.addFavoriteMeal(
-      FavoriteMealModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: fav.name,
-        calories: fav.kcal,
-        protein: 0,
+    String name,
+  ) async {
+    final success = await controller.analyzeMeal(name);
+    if (!context.mounted) return;
+
+    if (success) {
+      context.push(AppRoutes.analysis);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(controller.analysisError ?? 'Could not analyze meal.'),
+        ),
+      );
+    }
+  }
+
+  // ── Voice Input ─────────────────────────────────────────────────────────
+
+  void _startVoiceInput(BuildContext screenContext, MealController controller) {
+    showModalBottomSheet(
+      context: screenContext,
+      isScrollControlled: true,
+      builder: (ctx) => _VoiceInputSheet(
+        onAnalyze: (transcript) async {
+          Navigator.pop(ctx);
+          final success = await controller.analyzeMeal(transcript);
+          if (!screenContext.mounted) return;
+          if (success) {
+            screenContext.push(AppRoutes.analysis);
+          } else {
+            ScaffoldMessenger.of(screenContext).showSnackBar(
+              SnackBar(content: Text(controller.analysisError ?? 'Could not analyze meal.')),
+            );
+          }
+        },
       ),
     );
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('${fav.name} logged!')));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Voice Input Widget
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _VoiceInputSheet extends StatefulWidget {
+  final void Function(String transcript) onAnalyze;
+  const _VoiceInputSheet({required this.onAnalyze});
+
+  @override
+  State<_VoiceInputSheet> createState() => _VoiceInputSheetState();
+}
+
+class _VoiceInputSheetState extends State<_VoiceInputSheet>
+    with SingleTickerProviderStateMixin {
+  final VoiceInputService _service = VoiceInputService();
+
+  bool _ready = false;
+  String _transcript = '';
+  String? _error;
+  late AnimationController _animCtrl;
+  late Animation<double> _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _pulse = Tween<double>(begin: 1.0, end: 1.15).animate(
+      CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut),
+    );
+    _initAndListen();
+  }
+
+  Future<void> _initAndListen() async {
+    final available = await _service.initialize();
+    if (!available) {
+      if (mounted) setState(() => _error = 'Speech recognition not available on this device.');
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _ready = true);
+    _animCtrl.repeat(reverse: true);
+
+    // Subscribe BEFORE calling startListening so we never miss the
+    // first partial result, which can arrive almost immediately on
+    // fast devices before an await-then-listen chain completes.
+    _service.transcriptStream.listen(
+      (transcript) {
+        if (mounted) setState(() => _transcript = transcript);
+      },
+      onError: (e) {
+        if (mounted) setState(() => _error = 'Error: $e');
+      },
+    );
+
+    await _service.startListening('en_US');
+  }
+
+  @override
+  void dispose() {
+    _service.dispose();
+    _animCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Pulsing mic icon
+          ScaleTransition(
+            scale: _pulse,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: _ready ? Colors.red.withAlpha(30) : theme.dividerColor,
+                borderRadius: BorderRadius.circular(40),
+              ),
+              child: Icon(
+                _ready ? Icons.mic : Icons.mic_off,
+                color: _ready ? Colors.red : theme.hintColor,
+                size: 40,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Status / error
+          if (_error != null)
+            Text(_error!, style: tt.bodySmall?.copyWith(color: Colors.red))
+          else if (!_ready)
+            Text('Initialising…', style: tt.bodySmall)
+          else
+            Text(
+              _transcript.isEmpty ? 'Listening…' : 'Heard:',
+              style: tt.bodySmall,
+            ),
+
+          // Transcript
+          if (_transcript.isNotEmpty)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.dividerColor),
+              ),
+              child: Text(
+                _transcript,
+                style: tt.bodyMedium,
+              ),
+            ),
+
+          const SizedBox(height: 8),
+
+          // Buttons
+          Row(
+            children: [
+              if (_ready)
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      final nav = Navigator.of(context);
+                      await _service.stopListening();
+                      nav.pop();
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                ),
+              if (_ready && _transcript.isNotEmpty) ...[
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      widget.onAnalyze(_transcript);
+                    },
+                    child: const Text('Analyze'),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -348,7 +558,6 @@ class _MethodCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Icon bubble
             Container(
               width: 52,
               height: 52,
@@ -434,11 +643,15 @@ class _AnalyzeButton extends StatelessWidget {
   }
 }
 
+/// Real quick-favorite row driven by an actual meal name from Firestore
+/// (MealController.getQuickFavorites()), not a fabricated _FavItem with
+/// a fake calorie count and a hardcoded asset path that doesn't exist in
+/// the project's assets.
 class _FavoriteRow extends StatelessWidget {
-  final _FavItem item;
-  final VoidCallback onAdd;
+  final String name;
+  final VoidCallback onTap;
 
-  const _FavoriteRow({required this.item, required this.onAdd});
+  const _FavoriteRow({required this.name, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -455,49 +668,30 @@ class _FavoriteRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // ── Meal image ────────────────────────────────────────────────────
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(
-              item.image,
-              width: 56,
-              height: 56,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                width: 56,
-                height: 56,
-                color: colors.primary.withOpacity(0.08),
-                child: Icon(
-                  Icons.restaurant_menu_rounded,
-                  color: colors.primary,
-                  size: 24,
-                ),
-              ),
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: colors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.restaurant_menu_rounded,
+              color: colors.primary,
+              size: 20,
             ),
           ),
           const SizedBox(width: 14),
-          // ── Info ──────────────────────────────────────────────────────────
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.name,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '${item.kcal} kcal • ${item.mealType}',
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
+            child: Text(
+              name,
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-          // ── + button ──────────────────────────────────────────────────────
           GestureDetector(
-            onTap: onAdd,
+            onTap: onTap,
             child: Container(
               width: 30,
               height: 30,
@@ -512,19 +706,4 @@ class _FavoriteRow extends StatelessWidget {
       ),
     );
   }
-}
-
-// ── Internal data ─────────────────────────────────────────────────────────────
-class _FavItem {
-  final String name;
-  final int kcal;
-  final String mealType;
-  final String image;
-
-  const _FavItem({
-    required this.name,
-    required this.kcal,
-    required this.mealType,
-    required this.image,
-  });
 }

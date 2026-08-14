@@ -2,6 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/meal_controller.dart';
+import '../../controllers/setting_controller.dart';
+import '../../models/meal_model.dart';
 
 class MealAnalysisScreen extends StatelessWidget {
   const MealAnalysisScreen({super.key});
@@ -18,7 +20,97 @@ class MealAnalysisScreen extends StatelessWidget {
         backgroundColor: theme.scaffoldBackgroundColor,
         body: const Center(child: CircularProgressIndicator()),
       );
-    }
+}
+
+void showPortionAdjuster(BuildContext context, MealController controller) {
+  final meal = controller.analyzedMeal;
+  if (meal == null) return;
+
+  final factorCtrl = TextEditingController(text: '1.0');
+  final theme = Theme.of(context);
+  final colors = theme.colorScheme;
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: theme.cardColor,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (ctx) => Padding(
+      padding: EdgeInsets.only(
+        left: 20, right: 20, top: 24,
+        bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Adjust Portions', style: theme.textTheme.headlineMedium),
+          const SizedBox(height: 8),
+          Text(
+            'Enter a portion multiplier (e.g. 0.5 for half, 2.0 for double)',
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: factorCtrl,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: 'Portion factor',
+              hintText: '1.0',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Calories: ${(meal.calories * 1.0).toInt()} → ${(meal.calories * (double.tryParse(factorCtrl.text) ?? 1.0)).toInt()} kcal',
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                final factor = double.tryParse(factorCtrl.text) ?? 1.0;
+                if (factor <= 0) return;
+                final adjusted = MealModel(
+                  id: meal.id,
+                  name: meal.name,
+                  type: meal.type,
+                  calories: (meal.calories * factor).round(),
+                  protein: meal.protein * factor,
+                  carbs: meal.carbs * factor,
+                  fat: meal.fat * factor,
+                  loggedAt: meal.loggedAt,
+                  imageUrl: meal.imageUrl,
+                  source: meal.source,
+                  notes: meal.notes,
+                  analyzedBy: meal.analyzedBy,
+                );
+                controller.updateAnalyzedMeal(adjusted);
+                Navigator.pop(ctx);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colors.primary,
+                foregroundColor: colors.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Apply Adjustment'),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -38,7 +130,12 @@ class MealAnalysisScreen extends StatelessWidget {
                     const SizedBox(height: 20),
 
                     // ── Health score card ─────────────────────────────────
-                    _HealthScoreCard(score: 85),
+                    _HealthScoreCard(
+                      score: _computeHealthScore(
+                        meal,
+                        context.watch<SettingController>(),
+                      ),
+                    ),
 
                     const SizedBox(height: 24),
 
@@ -53,54 +150,91 @@ class MealAnalysisScreen extends StatelessWidget {
                     const SizedBox(height: 24),
 
                     // ── Vitamins ──────────────────────────────────────────
-                    _NutrientSection(
-                      title: 'Vitamins',
-                      items: const [
-                        _NutrientItem(
-                          name: 'Vitamin A',
-                          percent: 0.85,
-                          label: '85%',
+                    if (meal.vitamins != null && meal.vitamins!.isNotEmpty)
+                      _NutrientSection(
+                        title: 'Vitamins',
+                        items: meal.vitamins!.entries.map((e) {
+                          final pct = (e.value * 100).round();
+                          return _NutrientItem(
+                            name: e.key,
+                            percent: e.value,
+                            label: '$pct%',
+                          );
+                        }).toList(),
+                        color: colors.primary,
+                      )
+                    else ...[
+                      _SectionTitle(
+                        icon: Icons.eco,
+                        title: 'Vitamins',
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No micronutrient data available. Try re-analyzing with a more detailed description.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
                         ),
-                        _NutrientItem(
-                          name: 'Vitamin C',
-                          percent: 0.42,
-                          label: '42%',
-                        ),
-                        _NutrientItem(
-                          name: 'Vitamin K',
-                          percent: 1.0,
-                          label: '100%+',
-                        ),
-                      ],
-                      color: colors.primary,
-                    ),
+                      ),
+                    ],
 
                     const SizedBox(height: 24),
 
                     // ── Minerals ──────────────────────────────────────────
-                    _NutrientSection(
-                      title: 'Minerals',
-                      items: const [
-                        _NutrientItem(
-                          name: 'Iron',
-                          percent: 0.28,
-                          label: '28%',
+                    if (meal.minerals != null && meal.minerals!.isNotEmpty)
+                      _NutrientSection(
+                        title: 'Minerals',
+                        items: meal.minerals!.entries.map((e) {
+                          final pct = (e.value * 100).round();
+                          return _NutrientItem(
+                            name: e.key,
+                            percent: e.value,
+                            label: '$pct%',
+                          );
+                        }).toList(),
+                        color: colors.secondary,
+                      )
+                    else ...[
+                      _SectionTitle(
+                        icon: Icons.grain,
+                        title: 'Minerals',
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No micronutrient data available. Try re-analyzing with a more detailed description.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
                         ),
-                        _NutrientItem(
-                          name: 'Magnesium',
-                          percent: 0.55,
-                          label: '55%',
-                        ),
-                        _NutrientItem(
-                          name: 'Potassium',
-                          percent: 0.15,
-                          label: '15%',
-                        ),
-                      ],
-                      color: colors.secondary,
-                    ),
+                      ),
+                    ],
 
                     const SizedBox(height: 32),
+
+                    // ── Meal Type selector ──────────────────────────────────
+                    _MealTypeSelector(
+                      currentType: meal.type,
+                      onChanged: (type) {
+                        controller.updateAnalyzedMeal(
+                          MealModel(
+                            id: meal.id,
+                            name: meal.name,
+                            type: type,
+                            calories: meal.calories,
+                            protein: meal.protein,
+                            carbs: meal.carbs,
+                            fat: meal.fat,
+                            loggedAt: meal.loggedAt,
+                            imageUrl: meal.imageUrl,
+                            source: meal.source,
+                            notes: meal.notes,
+                            analyzedBy: meal.analyzedBy,
+                            vitamins: meal.vitamins,
+                            minerals: meal.minerals,
+                          ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
 
                     // ── Log to Diary button ───────────────────────────────
                     _LogButton(
@@ -116,7 +250,7 @@ class MealAnalysisScreen extends StatelessWidget {
                     // ── Adjust Portions ───────────────────────────────────
                     Center(
                       child: TextButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => showPortionAdjuster(context, controller),
                         child: Text(
                           'Adjust Portions',
                           style: theme.textTheme.bodyMedium?.copyWith(
@@ -215,10 +349,24 @@ class _HealthScoreCard extends StatelessWidget {
   final int score;
   const _HealthScoreCard({required this.score});
 
+  Color _ringColor() {
+    if (score >= 80) return const Color(0xFF00E676);
+    if (score >= 60) return const Color(0xFFFFC107);
+    if (score >= 40) return const Color(0xFFFF9800);
+    return const Color(0xFFE53935);
+  }
+
+  String _label() {
+    if (score >= 80) return 'Well-balanced meal';
+    if (score >= 60) return 'Moderate balance';
+    if (score >= 40) return 'Needs adjustment';
+    return 'Highly unbalanced';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final ringColor = _ringColor();
 
     return Container(
       width: double.infinity,
@@ -237,7 +385,7 @@ class _HealthScoreCard extends StatelessWidget {
             child: CustomPaint(
               painter: _ScoreRingPainter(
                 score: score / 100,
-                color: colors.secondary,
+                color: ringColor,
                 trackColor: theme.dividerColor,
               ),
               child: Center(
@@ -272,13 +420,13 @@ class _HealthScoreCard extends StatelessWidget {
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: colors.primary,
+                  color: ringColor,
                   shape: BoxShape.circle,
                 ),
               ),
               const SizedBox(width: 8),
               Text(
-                'Optimal Nutrient Density',
+                _label(),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.hintColor,
                 ),
@@ -629,6 +777,115 @@ class _LogButton extends StatelessWidget {
                 ],
               ),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Health Score Computation
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Computes a 0-100 health score based on how well a single meal's macros
+/// align with 1/3 of the user's daily goals (breakfast/lunch/dinner split).
+/// Higher scores mean the meal is well-proportioned relative to the goals.
+int _computeHealthScore(MealModel meal, SettingController settings) {
+  if (settings.goalCalories <= 0) return 50;
+
+  double component(double actual, double expected) {
+    if (expected <= 0) return 100;
+    return max(0, 100 - ((actual - expected).abs() / expected) * 100);
+  }
+
+  final expectedCal = settings.goalCalories / 3;
+  final expectedProtein = settings.goalProtein / 3;
+  final expectedCarbs = settings.goalCarbs / 3;
+  final expectedFat = settings.goalFat / 3;
+
+  final calScore = component(meal.calories.toDouble(), expectedCal);
+  final proteinScore = component(meal.protein, expectedProtein);
+  final carbsScore = component(meal.carbs, expectedCarbs);
+  final fatScore = component(meal.fat, expectedFat);
+
+  return ((calScore + proteinScore + carbsScore + fatScore) / 4).round();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Meal Type Selector
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _MealTypeSelector extends StatelessWidget {
+  final String currentType;
+  final ValueChanged<String> onChanged;
+
+  const _MealTypeSelector({
+    required this.currentType,
+    required this.onChanged,
+  });
+
+  static const _types = ['breakfast', 'lunch', 'dinner', 'snack'];
+  static const _labels = {'breakfast': 'Breakfast', 'lunch': 'Lunch', 'dinner': 'Dinner', 'snack': 'Snack'};
+  static const _icons = {'breakfast': Icons.free_breakfast, 'lunch': Icons.lunch_dining, 'dinner': Icons.dinner_dining, 'snack': Icons.cookie};
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final divider = Theme.of(context).dividerColor;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('MEAL TYPE', style: tt.labelSmall?.copyWith(
+          color: scheme.onSurface.withAlpha(100),
+          letterSpacing: 1.5,
+        )),
+        const SizedBox(height: 8),
+        Row(
+          children: _types.map((type) {
+            final selected = currentType == type;
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: type == 'breakfast' ? 0 : 4,
+                  right: type == 'snack' ? 0 : 4,
+                ),
+                child: GestureDetector(
+                  onTap: () => onChanged(type),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: selected ? scheme.primary.withAlpha(25) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: selected ? scheme.primary : divider,
+                        width: selected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          _icons[type],
+                          size: 20,
+                          color: selected ? scheme.primary : scheme.onSurface.withAlpha(120),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _labels[type]!,
+                          style: tt.labelSmall?.copyWith(
+                            color: selected ? scheme.primary : scheme.onSurface.withAlpha(120),
+                            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }

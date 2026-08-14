@@ -4,7 +4,7 @@ class UserMessage extends StatelessWidget {
   final String time;
   final String message;
 
-  const UserMessage({required this.time, required this.message});
+  const UserMessage({super.key, required this.time, required this.message});
 
   @override
   Widget build(BuildContext context) {

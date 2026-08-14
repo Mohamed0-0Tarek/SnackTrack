@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
+/// Stats grid — `avgCalories` is now real data from WeeklyReportController.
+/// Hydration/Sleep quality remain placeholders since those aren't tracked.
 class StatsGrid extends StatelessWidget {
-  const StatsGrid({super.key});
+  final int avgCalories;
+
+  const StatsGrid({super.key, required this.avgCalories});
 
   @override
   Widget build(BuildContext context) {
@@ -19,28 +23,37 @@ class StatsGrid extends StatelessWidget {
           icon: Icons.local_fire_department_outlined,
           iconColor: scheme.tertiary,
           label: 'AVG CALORIES',
-          value: '2,450',
+          value: avgCalories > 0
+              ? '${_formatNumber(avgCalories)} kcal'
+              : '–',
         ),
         _StatTile(
           icon: Icons.bolt,
           iconColor: scheme.primary,
           label: 'ENERGY PEAK',
-          value: '88%',
+          value: '–',
         ),
         _StatTile(
           icon: Icons.water_drop_outlined,
           iconColor: scheme.primary,
           label: 'HYDRATION',
-          value: '3.2L',
+          value: '–',
         ),
         _StatTile(
           icon: Icons.bedtime_outlined,
           iconColor: scheme.secondary,
           label: 'SLEEP QUALITY',
-          value: '7.5h',
+          value: '–',
         ),
       ],
     );
+  }
+
+  String _formatNumber(int n) {
+    if (n >= 1000) {
+      return '${(n / 1000).toStringAsFixed(1)}k';
+    }
+    return n.toString();
   }
 }
 
@@ -92,7 +105,7 @@ class _StatTile extends StatelessWidget {
                 value,
                 style: tt.displayMedium?.copyWith(
                   fontWeight: FontWeight.w700,
-                  fontSize: 22,
+                  fontSize: 20,
                 ),
               ),
             ],
